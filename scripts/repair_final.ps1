@@ -1,0 +1,10 @@
+$p='C:\Users\TYLI\Desktop\1-click\1-Click-Sales-Solution-ten-story-stone-pagoda\docs\presentation-v2.html'
+$s=[Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes($p))
+$s=$s.Replace('<title>1-Pick Rescue Agent | 10층 석탑</title>','<title>1-pick Agent | 10층 석탑</title>').Replace('1-Pick Rescue Agent<br>10층 석탑','1-pick Agent<br>10층 석탑').Replace('10층 석탑</span><img','1-pick Agent</span><img')
+$s=$s.Replace('$11</div><div class="footer-tag">','<div class="slide-no">01</div><div class="footer-tag">')
+$s=$s.Replace('<div><b>07</b><span>검증과 확장</span></div>','').Replace('<div><b>08</b><span>Q&amp;A</span></div>','<div><b>12</b><span>Q&amp;A</span></div>')
+$s=$s.Replace('<section class="slide paper">\n  <div class="eyebrow">07 · 화면과 시연</div>','<section class="slide paper">\n  <div class="eyebrow">09 · 산출물 화면</div>')
+$s=$s.Replace('<div class="slide-no">09</div>','<div class="slide-no">09</div>')
+$s=[regex]::Replace($s,'(?s)<section class="slide paper">\s*<div class="eyebrow">09 · 산출물 화면</div>.*?</section>','<section class="slide paper"><div class="eyebrow">09 · 산출물 화면</div><h2>완성된 산출물을<br><span style="color:var(--blue)">이곳에 크게 보여줍니다.</span></h2><div class="capture" style="margin-top:40px;min-height:55vh;width:100%;font-size:18px"><div><strong style="font-size:24px">산출물 화면 삽입 영역</strong><br>산출물이 완성되면 이 영역을 실제 화면 캡처로 교체합니다.<br><span class="small">권장: 1-Pick · 상담 분석 · CRM 결과 중 핵심 화면 1장</span></div></div><div class="slide-no">09</div></section>',1)
+$s=$s.Replace('<div class="eyebrow">12 · 마무리</div>','<div class="eyebrow">12 · 마무리</div>')
+[IO.File]::WriteAllBytes($p,[Text.Encoding]::UTF8.GetBytes($s))

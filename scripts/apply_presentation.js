@@ -1,0 +1,11 @@
+const fs = require('fs');
+const cp = require('child_process');
+const path = 'C:/Users/TYLI/Desktop/1-click/1-Click-Sales-Solution-ten-story-stone-pagoda/docs/presentation-v2.html';
+const root = 'C:/Users/TYLI/Desktop/1-click/1-Click-Sales-Solution-ten-story-stone-pagoda';
+let s = cp.execFileSync('git', ['show','HEAD:docs/presentation-v2.html'], {cwd:root, encoding:'utf8'});
+s = s.replace('<title>1-Pick Rescue Agent | 10층 석탑</title>','<title>1-pick Agent | 10층 석탑</title>');
+s = s.replace('<div><b>07</b>검증과 확장</div>','').replace('※ 시연은 별도 산출물 화면으로 진행합니다.','※ 산출물 완성 후 화면을 크게 삽입합니다.');
+const st=s.indexOf('<section class="s w"><div class="ey">07 · 검증과 확장</div>'); const en=s.indexOf('<section class="s b">',st); if(st>=0&&en>st)s=s.slice(0,st)+s.slice(en);
+const cs=s.indexOf('<section class="s p"><div class="ey">06 · 산출물 화면</div>'); const ce=s.indexOf('<section class="s b">',cs); const cap='<section class="s p"><div class="ey">06 · 산출물 화면</div><h2>완성된 산출물을<br><span style="color:#0670d8">이곳에 크게 보여줍니다.</span></h2><div class="capture-grid" style="display:block;max-width:1320px;width:100%;margin-top:38px"><div class="slot" style="min-height:52vh;width:100%;font-size:18px"><div><b style="font-size:24px">산출물 화면 삽입 영역</b><br>산출물이 완성되면 이 영역을 실제 화면 캡처로 교체합니다.<br><span class="small">권장: 1-Pick · 상담 분석 · CRM 결과 중 핵심 화면 1장</span></div></div></div><span class="no">06</span></section>\n    '; if(cs>=0&&ce>cs)s=s.slice(0,cs)+cap+s.slice(ce);
+s=s.replace('<div><b>08</b>Q&amp;A</div>','<div><b>07</b>Q&amp;A</div>').replace('08 · 마무리 · Q&amp;A','07 · 마무리 · Q&amp;A').replace('<span class="no">08</span>','<span class="no">07</span>').replace('1-Pick Rescue Agent<br>10층 석탑','1-pick Agent<br>10층 석탑');
+fs.writeFileSync(path,s,'utf8');

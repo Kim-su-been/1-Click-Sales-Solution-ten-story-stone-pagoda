@@ -1,0 +1,13 @@
+$p = Join-Path (Get-Location) 'docs\presentation-v2.html'
+$s = [IO.File]::ReadAllText($p)
+$s = $s -replace '<title>[^<]*</title>', '<title>1-pick Agent | 10층 석탑</title>'
+$s = $s.Replace('<div><b>07</b>검증과 확장</div>', '')
+$s = $s.Replace('※ 시연은 별도 산출물 화면으로 진행합니다.', '※ 산출물 완성 후 화면을 크게 삽입합니다.')
+$s = $s -replace '(?s)<section class="s w"><div class="ey">07 · 검증과 확장</div>.*?</section>\s*', ''
+$cap = '<section class="s p"><div class="ey">06 · 산출물 화면</div><h2>완성된 산출물을<br><span style="color:#0670d8">이곳에 크게 보여줍니다.</span></h2><div class="capture-grid" style="display:block;max-width:1320px;width:100%;margin-top:38px"><div class="slot" style="min-height:52vh;width:100%;font-size:18px"><div><b style="font-size:24px">산출물 화면 삽입 영역</b><br>산출물이 완성되면 이 영역을 실제 화면 캡처로 교체합니다.<br><span class="small">권장: 1-Pick · 상담 분석 · CRM 결과 중 핵심 화면 1장</span></div></div></div><span class="no">06</span></section>'
+$s = $s -replace '(?s)<section class="s p"><div class="ey">06 · 산출물 화면</div>.*?</section>', $cap
+$s = $s.Replace('<div><b>08</b>Q&amp;A</div>', '<div><b>07</b>Q&amp;A</div>')
+$s = $s.Replace('08 · 마무리 · Q&amp;A', '07 · 마무리 · Q&amp;A')
+$s = $s.Replace('<span class="no">08</span>', '<span class="no">07</span>')
+$s = $s.Replace('<p class="lead">1-Pick Rescue Agent<br>10층 석탑</p>', '<p class="lead">1-pick Agent<br>10층 석탑</p>')
+[IO.File]::WriteAllText($p,$s,(New-Object Text.UTF8Encoding($false)))
