@@ -111,7 +111,12 @@ def _fc_name_placeholder(customer: Customer) -> str:
 def _build_call_script(customer: Customer, reason_text: str) -> str:
     return (
         f"안녕하세요, {customer.name} 고객님. 새롭게 계약 관리를 맡게 된 "
-        f"{_fc_name_placeholder(customer)}입니다. {reason_text}."
+        f"{_fc_name_placeholder(customer)}입니다. 바쁘신 시간에 갑작스레 연락드려 죄송합니다. "
+        f"다름이 아니라 {reason_text} 차원에서 연락드렸습니다. "
+        f"갱신 시점에는 고객님의 연령과 보장 내용에 따라 보험료가 재산정될 수 있어, "
+        f"갱신 조건을 미리 안내해 드리고자 연락드렸습니다. "
+        f"갱신 여부는 고객님께서 편하게 결정하시면 되고, 궁금하신 점이 있으시면 언제든 편하게 여쭤봐 주세요. "
+        f"혹시 지금 통화 괜찮으실까요? 어려우시면 편하신 시간에 다시 연락드리겠습니다."
     )
 
 

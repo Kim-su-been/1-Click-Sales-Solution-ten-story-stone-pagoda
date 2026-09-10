@@ -1,7 +1,8 @@
-"""UI 공통 유틸 — 금융권 영업지원시스템에 맞는 절제된 타이포/컬러 스타일 헬퍼.
+"""UI 공통 유틸 — 사내 시스템 관리자 화면에 맞는 미니멀 스타일 헬퍼.
 
-보험사 내부 업무 화면을 기준으로 삼아 장식적 이모지·원색 배지 대신
-네이비 계열 단일 톤·얇은 보더·명확한 타이포 위계로 통일한다.
+Apple Human Interface / Toss 디자인 언어를 참고해 단일 accent 컬러,
+넉넉한 여백, 얇은 보더 대신 부드러운 elevation, 텍스트 위계 중심의
+정리를 기본으로 한다. 브랜드 배너·이모지 없이 콘텐츠 자체로 구분한다.
 """
 from __future__ import annotations
 
@@ -13,123 +14,168 @@ def nfc(value: str) -> str:
     return unicodedata.normalize("NFC", value)
 
 
+# 내부 상태 코드 → 화면 표시용 plain-language 라벨. 값 자체(테스트/Expected 비교 대상)는
+# 건드리지 않고 화면에 보여줄 때만 사람이 읽기 쉬운 말로 바꾼다.
+STATUS_LABELS: dict[str, str] = {
+    "DRAFT": "초안",
+    "FC_REVIEW": "FC 검토 대기",
+    "SAVED": "저장 완료",
+    "SUGGESTED": "제안됨",
+    "PENDING_FC_CONFIRM": "FC 확인 대기",
+    "COMPLIANT": "규정 준수 확인",
+    "REJECTED": "반려",
+}
+
+
+def humanize(text: str) -> str:
+    """내부 코드/태그성 텍스트를 화면에 읽기 쉽게 변환 (값 자체는 변경하지 않음).
+
+    - 알려진 상태 코드는 한국어 라벨로 치환
+    - '_' 로 이어진 태그성 텍스트는 공백으로 풀어서 자연스럽게 표시
+    """
+    t = nfc(str(text))
+    if t in STATUS_LABELS:
+        return STATUS_LABELS[t]
+    return t.replace("_", " ")
+
+
 def inject_css() -> None:
-    """금융권 업무 화면 톤의 CSS — 절제된 컬러·명확한 위계·얇은 보더."""
+    """관리자 화면 톤의 CSS — 단일 accent·넓은 여백·부드러운 카드 elevation."""
     import streamlit as st
 
     st.markdown(
         """
         <style>
         :root {
-            --navy-900: #0f2440;
-            --navy-800: #16345c;
-            --navy-700: #1e4470;
-            --navy-100: #eef2f8;
-            --line: #dfe6ee;
-            --text-primary: #1c2b3a;
-            --text-muted: #64748b;
-            --bg-subtle: #f7f9fb;
-            --ok: #1d6f42;
-            --ok-bg: #e7f3ec;
-            --warn: #92661a;
-            --warn-bg: #fbf1de;
+            --accent: #3182f6;
+            --accent-weak: #eaf2fe;
+            --ink: #191f28;
+            --ink-secondary: #6b7684;
+            --ink-tertiary: #8b95a1;
+            --line: #f2f4f6;
+            --surface: #ffffff;
+            --surface-muted: #f9fafb;
+            --ok: #12805c;
+            --ok-bg: #e3f6ec;
+            --warn: #b25e09;
+            --warn-bg: #fdf1df;
+            --radius-card: 16px;
+            --radius-control: 12px;
+            --radius-pill: 999px;
+            --shadow-card: 0 1px 2px rgba(15,23,42,0.04), 0 6px 20px rgba(15,23,42,0.06);
         }
 
-        [data-testid="stAppViewContainer"] .block-container { padding-top: 3rem; }
-        html, body, [class*="css"] { color: var(--text-primary); }
-
-        /* --- 상단 시스템 바 --- */
-        .app-topbar { display: flex; align-items: baseline; justify-content: space-between;
-            border-bottom: 2px solid var(--navy-900); padding-bottom: 10px; margin-bottom: 18px; }
-        .app-topbar .name { font-size: 1.05rem; font-weight: 700; color: var(--navy-900); letter-spacing: -.01em; }
-        .app-topbar .name .divider { color: var(--line); margin: 0 8px; font-weight: 400; }
-        .app-topbar .name .sub { font-size: 0.82rem; font-weight: 400; color: var(--text-muted); }
-        .app-topbar .tag { font-size: 0.68rem; font-weight: 700; letter-spacing: .06em;
-            color: var(--navy-700); border: 1px solid var(--navy-700); border-radius: 3px;
-            padding: 2px 8px; text-transform: uppercase; }
+        [data-testid="stAppViewContainer"] .block-container { padding-top: 4rem; max-width: 1120px; }
+        html, body, [class*="css"] { color: var(--ink); }
 
         h1 { font-size: 1.3rem !important; }
 
-        /* --- 페이지 헤더 --- */
-        .page-eyebrow { font-size: 0.74rem; font-weight: 600; letter-spacing: .05em;
-            color: var(--text-muted); text-transform: uppercase; margin: 0 0 4px 1px; }
-        .page-title { font-size: 1.45rem; font-weight: 700; color: var(--navy-900); margin: 0 0 16px 0;
-            padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+        /* --- 상단 로고 배너 (우측 정렬) --- */
+        .logo-banner { display: flex; justify-content: flex-end;
+            padding: 2px 0 16px 0; margin-bottom: 12px; border-bottom: 1px solid var(--line); }
+        .logo-banner img { height: 26px; display: block; }
 
-        /* --- 섹션 헤더 --- */
-        .section-header { font-size: 0.95rem; font-weight: 700; color: var(--navy-800);
-            margin: 24px 0 10px 0; padding: 2px 0 8px 10px; border-bottom: 1px solid var(--line);
-            border-left: 3px solid var(--navy-700); }
+        /* --- 사이드바 --- */
+        [data-testid="stSidebarContent"] { padding-top: 1.75rem; }
+        .sidebar-eyebrow { font-size: 0.74rem; font-weight: 700; letter-spacing: .05em;
+            color: var(--ink-tertiary); text-transform: uppercase; margin: 0 0 10px 1px; }
+
+        /* --- 페이지 헤더 --- */
+        .page-eyebrow { font-size: 0.78rem; font-weight: 600; color: var(--accent);
+            margin: 0 0 6px 1px; }
+        .page-title { font-size: 1.7rem; font-weight: 800; color: var(--ink); letter-spacing: -.01em;
+            margin: 0 0 28px 0; }
+
+        /* --- 섹션 헤더: 라인/아이콘 없이 타이포 위계만으로 구분 --- */
+        .section-header { font-size: 1.02rem; font-weight: 700; color: var(--ink);
+            margin: 32px 0 12px 0; }
         .section-header.first { margin-top: 4px; }
 
         /* --- 카드 --- */
-        .pick-card { background: var(--bg-subtle); border: 1px solid var(--line); border-radius: 4px;
-            padding: 18px 20px; }
-        .pick-card .title { font-size: 1.1rem; font-weight: 700; color: var(--navy-900); margin-top: 8px; }
-        .pick-card .score-badge { display: inline-block; background: var(--navy-900); color: #ffffff;
-            font-weight: 700; padding: 5px 14px; border-radius: 3px; font-size: 0.9rem; letter-spacing: .01em; }
+        .pick-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card);
+            box-shadow: var(--shadow-card); padding: 22px 24px; }
+        .pick-card .title { font-size: 1.15rem; font-weight: 700; color: var(--ink); margin-top: 10px; }
+        .pick-card .score-badge { display: inline-block; background: var(--accent); color: #ffffff;
+            font-weight: 700; padding: 6px 16px; border-radius: var(--radius-pill); font-size: 0.9rem; }
 
-        /* --- 상태 태그 (배지) --- */
-        .badge { display: inline-block; padding: 2px 10px; border-radius: 3px;
-            font-size: 0.76rem; font-weight: 600; letter-spacing: .01em; border: 1px solid transparent; }
-        .badge-ok { background: var(--ok-bg); color: var(--ok); border-color: #c7e4d2; }
-        .badge-warn { background: var(--warn-bg); color: var(--warn); border-color: #f0dfb4; }
-        .badge-info { background: var(--navy-100); color: var(--navy-700); border-color: #d3e0ee; }
+        /* --- 상태 태그 (배지): pill, 보더 없이 소프트 컬러 --- */
+        .badge { display: inline-block; padding: 4px 12px; border-radius: var(--radius-pill);
+            font-size: 0.76rem; font-weight: 600; }
+        .badge-ok { background: var(--ok-bg); color: var(--ok); }
+        .badge-warn { background: var(--warn-bg); color: var(--warn); }
+        .badge-info { background: var(--accent-weak); color: var(--accent); }
 
         /* --- 고지/안내 문구 --- */
-        .notice { background: var(--bg-subtle); border: 1px solid var(--line); border-left: 3px solid var(--navy-700);
-            border-radius: 2px; padding: 9px 14px; font-size: 0.82rem; color: var(--text-muted); }
+        .notice { background: var(--surface-muted); border-radius: var(--radius-control);
+            padding: 12px 16px; font-size: 0.82rem; color: var(--ink-secondary); }
 
         /* --- 근거 블록 --- */
-        .ev-block { border-left: 2px solid var(--navy-700); background: var(--bg-subtle);
-            padding: 8px 12px; margin: 4px 0; font-size: 0.86rem; color: var(--text-primary); }
+        .ev-block { background: var(--surface-muted); border-radius: var(--radius-control);
+            padding: 10px 14px; margin: 6px 0; font-size: 0.86rem; color: var(--ink); }
 
         /* --- 사이드바 진행 스테퍼 --- */
-        .stepper { margin: 4px 0 18px 0; }
-        .step { display: flex; align-items: center; gap: 10px; position: relative; padding: 6px 0; }
+        .stepper { margin: 4px 0 20px 0; }
+        .step { display: flex; align-items: center; gap: 12px; position: relative; padding: 7px 0; }
         .step:not(:last-child)::after {
-            content: ""; position: absolute; left: 11px; top: 30px; width: 1px; height: 18px;
+            content: ""; position: absolute; left: 13px; top: 32px; width: 2px; height: 18px;
             background: var(--line);
         }
-        .step-dot { flex: 0 0 auto; width: 23px; height: 23px; border-radius: 3px;
+        .step-dot { flex: 0 0 auto; width: 26px; height: 26px; border-radius: var(--radius-pill);
             display: flex; align-items: center; justify-content: center;
-            font-size: 0.7rem; font-weight: 700; background: #fff; color: var(--text-muted);
-            border: 1px solid var(--line); }
-        .step-label { font-size: 0.84rem; color: var(--text-muted); }
-        .step-done .step-dot { background: var(--ok-bg); border-color: #c7e4d2; color: var(--ok); }
-        .step-done .step-label { color: var(--text-primary); }
-        .step-current .step-dot { background: var(--navy-900); border-color: var(--navy-900); color: #fff; }
-        .step-current .step-label { color: var(--navy-900); font-weight: 700; }
+            font-size: 0.72rem; font-weight: 700; background: var(--surface); color: var(--ink-tertiary);
+            border: 1.5px solid var(--line); }
+        .step-label { font-size: 0.86rem; color: var(--ink-tertiary); }
+        .step-done .step-dot { background: var(--ok-bg); border-color: var(--ok-bg); color: var(--ok); }
+        .step-done .step-label { color: var(--ink-secondary); }
+        .step-current .step-dot { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .step-current .step-label { color: var(--ink); font-weight: 700; }
 
-        /* --- 버튼: 금융권 톤(네이비) --- */
+        /* --- 버튼: 단일 accent, 넉넉한 radius --- */
+        div[data-testid="stButton"] button {
+            border-radius: var(--radius-control) !important;
+        }
         div[data-testid="stButton"] button[kind="primary"],
         div[data-testid="stButton"] button[kind="primaryFormSubmit"] {
-            background-color: var(--navy-900); border-color: var(--navy-900);
+            background-color: var(--accent); border-color: var(--accent);
         }
         div[data-testid="stButton"] button[kind="primary"]:hover {
-            background-color: var(--navy-700); border-color: var(--navy-700);
+            background-color: #1b64da; border-color: #1b64da;
         }
-        div[data-testid="stButton"] button[kind="secondary"] { border-color: var(--line); color: var(--text-primary); }
+        div[data-testid="stButton"] button[kind="secondary"] {
+            border-color: var(--line); color: var(--ink);
+        }
 
-        /* --- Expander (검증/보조 정보) --- */
-        div[data-testid="stExpander"] details { border-color: var(--line) !important; border-radius: 4px !important; }
-        div[data-testid="stExpander"] summary { font-size: 0.86rem; }
+        /* --- st.container(border=True): Streamlit 기본 보더 색/라운드만 정리 --- */
+        div[data-testid="stVerticalBlock"] {
+            border-radius: var(--radius-card);
+            border-color: var(--line);
+        }
+
+        /* --- Expander (보조/검증 정보) --- */
+        div[data-testid="stExpander"] details { border-color: var(--line) !important; border-radius: var(--radius-control) !important; }
+        div[data-testid="stExpander"] summary { font-size: 0.86rem; color: var(--ink-secondary); }
+
+        /* --- 코드 블록 --- */
+        div[data-testid="stCodeBlock"] { border-radius: var(--radius-control); }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
 
-def app_topbar(system_name: str, sub_label: str, tag: str = "DEMO") -> None:
-    """앱 최상단 시스템 바 — 회사 내부 업무 시스템 톤의 헤더."""
+def render_logo_banner() -> None:
+    """상단 로고 배너 — 사내 시스템 화면임을 나타내는 최소한의 브랜드 마크만 표시."""
+    import base64
+    from pathlib import Path
+
     import streamlit as st
 
+    logo_path = Path(__file__).parent / "assets" / "dongyang_logo.png"
+    if not logo_path.exists():
+        return
+    b64 = base64.b64encode(logo_path.read_bytes()).decode("ascii")
     st.markdown(
-        f'<div class="app-topbar">'
-        f'<div class="name">{nfc(system_name)}<span class="divider">|</span>'
-        f'<span class="sub">{nfc(sub_label)}</span></div>'
-        f'<div class="tag">{nfc(tag)}</div>'
-        f"</div>",
+        f'<div class="logo-banner"><img src="data:image/png;base64,{b64}" alt="동양생명" /></div>',
         unsafe_allow_html=True,
     )
 

@@ -11,6 +11,7 @@ from src.tools.interfaces import (
     ChannelGateway,
     ERR_SAFETY_BLOCKED,
     KAKAO_SENT,
+    POSTPONED,
     SMS_SENT,
     ToolExecutionResult,
 )
@@ -127,3 +128,10 @@ class MockChannelGateway(ChannelGateway):
             result_ref=attempt.get("attempt_id"),
         )
         return self._result_from_record(customer_id, session_id, KAKAO_SENT, approved_script, record)
+
+    def postpone(self, customer_id: str, session_id: str) -> ToolExecutionResult:
+        """오늘의 1-Pick 연락 보류(나중에). Safety Gate 없이 보류 사실만 기록."""
+        record = self.db.record_execution(
+            session_id, "channel_gateway", POSTPONED, True,
+        )
+        return self._result_from_record(customer_id, session_id, POSTPONED, "", record)

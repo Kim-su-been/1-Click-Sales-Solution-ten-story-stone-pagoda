@@ -61,34 +61,46 @@ def render(loader: DataLoader) -> None:
         unsafe_allow_html=True,
     )
 
-    # --- 점수 세부 항목 ---
+    # --- 점수 세부 항목: 쉬운 말 우선 표시, 상세 산출식은 보조 텍스트로 ---
     section_header("점수 세부 항목")
     with st.container(border=True):
         for item in pick_score.items:
             if item.points > 0:
-                st.markdown(f"- **{nfc(item.rule_id)}** · +{item.points}점 — {nfc(item.evidence_text)}")
+                st.markdown(
+                    f'<div style="margin-bottom:12px;">'
+                    f'<div style="font-size:0.95rem;">{nfc(item.name_kr)} · '
+                    f'<span style="color:var(--accent);font-weight:700;">+{item.points}점</span></div>'
+                    f'<div style="font-size:0.78rem;color:var(--ink-tertiary);margin-top:2px;">{nfc(item.evidence_text)}</div>'
+                    f"</div>",
+                    unsafe_allow_html=True,
+                )
         st.caption(
-            f"합계 **{pick_score.total}점**. Ineligible 고객은 후보에서 제외되며 "
-            "Eligible 후보 중 최고점 고객이 1-Pick으로 선정됩니다."
+            f"합계 {pick_score.total}점 — 연락 가능한 고객 중 이 점수가 가장 높아 오늘의 1-Pick으로 선정되었습니다."
         )
 
-    # --- 고객 선정 근거 ---
+    # --- 고객 선정 근거: 코드 나열 대신 문장으로 설명 ---
     section_header("고객 선정 근거")
+    from src.eligibility import EXCLUSION_REASON_LABELS
+
     ineligible = [(cid, res.exclusion_reason) for cid, res in selection.eligible.items() if not res.eligible]
     st.caption(
-        "Eligibility → Rescue Score → 최고점 1명 선정 (Customer Selection Agent). "
-        f"Ineligible {len(ineligible)}명: "
-        + ", ".join(f"{cid}({reason})" for cid, reason in ineligible)
-        if ineligible
-        else "Eligibility 통과 고객 없음"
+        f"전체 후보 {len(customers)}명 중 연락 가능 여부를 먼저 확인한 뒤, "
+        "그 안에서 점수가 가장 높은 고객 1명을 오늘의 1-Pick으로 선정했습니다."
     )
+    if ineligible:
+        excluded_text = ", ".join(
+            f"{nfc(loader.get_customer(cid).name)} 고객님({cid}) · "
+            f"{EXCLUSION_REASON_LABELS.get(reason, reason)}"
+            for cid, reason in ineligible
+        )
+        st.caption(f"이번에 제외된 고객 {len(ineligible)}명: {excluded_text}")
 
     # --- Contact Reason ---
     reason = gs.contact_reason
-    section_header("추천 Contact Reason")
+    section_header("추천 연락 사유")
     st.markdown(
-        f'<span class="badge badge-info">{nfc(reason["code"])}</span> '
-        f'<b>{nfc(reason["text"])}</b>',
+        f'<b>{nfc(reason["text"])}</b> '
+        f'<span class="badge badge-info">{nfc(reason["code"])}</span>',
         unsafe_allow_html=True,
     )
     st.caption(nfc(reason.get("pick_basis", "")))
@@ -110,15 +122,29 @@ def render(loader: DataLoader) -> None:
                 render_evidence(se, label="문장 근거", key_prefix=f"cs_{se['sentence'][:10]}")
 
     # --- 채널 버튼 ---
-    section_header("연락 채널 (Mock)")
-    c1, c2, c3 = st.columns(3)
+    section_header("연락 채널")
     call_script = call["text"]
     sms_script = scripts["SMS"]["text"]
     kakao_script = scripts["KAKAO"]["text"]
     session_id = demo_state.get_session_id()
 
-    from src.agents.orchestrator import start_mock_call, send_mock_sms, send_mock_kakao
+    from src.agents.orchestrator import (
+        postpone_pick,
+        send_mock_kakao,
+        send_mock_sms,
+        start_mock_call,
+    )
 
+    results_now = demo_state.get_tool_results()
+    # 문자/카톡/나중에는 "오늘의 1-Pick에 대해 취한 조치 1건"이라는 같은 성격의 행동이라
+    # 동시에 두 개가 완료 상태로 남으면(예: 카톡 발송 후 나중에) 화면이 모순되어 보인다.
+    # 셋 중 하나가 이미 기록되어 있으면 그 결과만 보여주고 나머지 선택지는 잠근다.
+    channel_action = next(
+        (k for k in ("SMS_SENT", "KAKAO_SENT", "POSTPONED") if results_now.get(k, {}).get("success")),
+        None,
+    )
+
+    c1, c2, c3, c4 = st.columns(4)
     if c1.button("전화하기", use_container_width=True, type="primary"):
         res = start_mock_call(session_id, cust_id, call_script)
         demo_state.set_tool_result("CALL_STARTED", res.to_dict())
@@ -128,55 +154,49 @@ def render(loader: DataLoader) -> None:
         else:
             st.error(f"전화를 시작할 수 없습니다: {res.error_message}")
         st.rerun()
-    result = demo_state.get_tool_results().get("CALL_STARTED")
-    if result:
-        st.markdown(
-            f'<span class="badge badge-ok">CALL_STARTED · exec {result.get("execution_id","")}</span>',
-            unsafe_allow_html=True,
-        )
-        st.caption("실제 전화 발신이 아니며 Mock 실행 기록만 저장됩니다.")
 
-    if c2.button("문자 발송 (Mock)", use_container_width=True):
+    if c2.button("문자 발송", use_container_width=True, disabled=channel_action not in (None, "SMS_SENT")):
         res = send_mock_sms(session_id, cust_id, sms_script)
         demo_state.set_tool_result("SMS_SENT", res.to_dict())
+        if not res.success:
+            st.error(f"문자를 보낼 수 없습니다: {res.error_message}")
         st.rerun()
-    sms_res = demo_state.get_tool_results().get("SMS_SENT")
-    if sms_res:
-        st.markdown(
-            f'<span class="badge badge-ok">SMS_SENT · exec {sms_res.get("execution_id","")}</span>'
-            if sms_res.get("success")
-            else f'<span class="badge badge-warn">SMS 차단 · {sms_res.get("error_message","")}</span>',
-            unsafe_allow_html=True,
-        )
-        st.caption("문자 발송(Mock) — 실제 발송이 아니며 실행 기록만 생성됩니다.")
 
-    if c3.button("카카오톡 발송 (Mock)", use_container_width=True):
+    if c3.button("카카오톡 발송", use_container_width=True, disabled=channel_action not in (None, "KAKAO_SENT")):
         res = send_mock_kakao(session_id, cust_id, kakao_script)
         demo_state.set_tool_result("KAKAO_SENT", res.to_dict())
+        if not res.success:
+            st.error(f"카카오톡을 보낼 수 없습니다: {res.error_message}")
         st.rerun()
-    kakao_res = demo_state.get_tool_results().get("KAKAO_SENT")
-    if kakao_res:
-        st.markdown(
-            f'<span class="badge badge-ok">KAKAO_SENT · exec {kakao_res.get("execution_id","")}</span>'
-            if kakao_res.get("success")
-            else f'<span class="badge badge-warn">카톡 차단 · {kakao_res.get("error_message","")}</span>',
-            unsafe_allow_html=True,
-        )
-        st.caption("카카오톡 발송(Mock) — 실제 발송이 아니며 실행 기록만 생성됩니다.")
 
-    if st.session_state.get("_show_sms"):
-        st.markdown("**문자 초안 (Mock — 실제 발송 안 함)**")
-        st.write(nfc(sms_script))
-        render_evidence(scripts["SMS"]["sentence_evidence"], label="문자 초안 근거", key_prefix="sms")
+    if c4.button("나중에", use_container_width=True, disabled=channel_action not in (None, "POSTPONED")):
+        res = postpone_pick(session_id, cust_id)
+        demo_state.set_tool_result("POSTPONED", res.to_dict())
+        st.rerun()
 
-    if st.session_state.get("_show_kakao"):
-        st.markdown("**카카오톡 초안 (Mock — 실제 발송 안 함)**")
-        st.write(nfc(kakao_script))
-        render_evidence(scripts["KAKAO"]["sentence_evidence"], label="카카오톡 초안 근거", key_prefix="kakao")
-
-    # 가상 데이터 고지(하단)
-    st.markdown("---")
-    st.caption(f"기준일: {cfg.DEMO_AS_OF_DATE} 기준 · 모든 값은 Demo Mock 데이터입니다.")
+    if channel_action == "SMS_SENT":
+        with st.container(border=True):
+            st.markdown(f"**{nfc(cust.name)} 고객님에게 문자를 보냈습니다.**")
+            st.write(nfc(sms_script))
+            render_evidence(scripts["SMS"]["sentence_evidence"], label="문자 근거 보기", key_prefix="sms")
+        if st.button("다시 선택하기", key="reset_channel_sms"):
+            results_now.pop("SMS_SENT", None)
+            st.rerun()
+    elif channel_action == "KAKAO_SENT":
+        with st.container(border=True):
+            st.markdown(f"**{nfc(cust.name)} 고객님에게 카카오톡을 보냈습니다.**")
+            st.write(nfc(kakao_script))
+            render_evidence(scripts["KAKAO"]["sentence_evidence"], label="카카오톡 근거 보기", key_prefix="kakao")
+        if st.button("다시 선택하기", key="reset_channel_kakao"):
+            results_now.pop("KAKAO_SENT", None)
+            st.rerun()
+    elif channel_action == "POSTPONED":
+        with st.container(border=True):
+            st.markdown(f"**오늘은 {nfc(cust.name)} 고객님에게 연락하지 않기로 했습니다.**")
+            st.caption("이 선택은 다음 1-Pick 추천에 반영됩니다.")
+        if st.button("다시 선택하기", key="reset_channel_postpone"):
+            results_now.pop("POSTPONED", None)
+            st.rerun()
 
     # --- Stage 2 Runtime 패널: 판매 흐름과 분리된 검증용 패널 ---
     with st.expander("기능 검증 정보 — Stage 2 Runtime (Orchestrator)"):

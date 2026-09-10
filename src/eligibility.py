@@ -17,6 +17,13 @@ INELIGIBLE_REASON_CONSENT = "CONTACT_CONSENT_NONE"
 INELIGIBLE_REASON_COMPLAINT = "ACTIVE_COMPLAINT"
 INELIGIBLE_REASON_NO_CONTRACT = "NO_ACTIVE_CONTRACT"
 
+# 화면 표시용 plain-language 라벨 (내부 코드값은 그대로 유지)
+EXCLUSION_REASON_LABELS: dict[str, str] = {
+    INELIGIBLE_REASON_CONSENT: "연락 동의된 채널 없음",
+    INELIGIBLE_REASON_COMPLAINT: "진행 중인 민원 있음",
+    INELIGIBLE_REASON_NO_CONTRACT: "유효한 계약 없음",
+}
+
 
 @dataclass
 class EligibilityResult:

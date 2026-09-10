@@ -35,6 +35,13 @@ def test_send_kakao(tmp_db, safety_rules):
     assert res.result_ref
 
 
+def test_postpone(tmp_db, safety_rules):
+    gw = MockChannelGateway(tmp_db, safety_rules)
+    res = gw.postpone("CUST-001", "sess-postpone")
+    assert res.event_type == "POSTPONED"
+    assert res.success is True
+
+
 # --- Safety Gate ---
 def test_rejected_script_blocked_for_call(tmp_db, safety_rules):
     gw = MockChannelGateway(tmp_db, safety_rules)

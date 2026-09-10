@@ -11,15 +11,13 @@ import streamlit as st
 import src.config as cfg
 import src.demo_state as demo_state
 from src.data_loader import DataLoadingError, get_loader
-from ui.common import app_topbar, inject_css, render_stepper
+from ui.common import inject_css, render_logo_banner, render_stepper
 
 
 def main() -> None:
     st.set_page_config(page_title=cfg.APP_TITLE, layout="wide")
     inject_css()
-
-    # 상단 시스템 바
-    app_topbar("영업지원시스템", cfg.APP_TITLE)
+    render_logo_banner()
 
     try:
         loader = get_loader()
@@ -35,11 +33,8 @@ def main() -> None:
         cfg.SCREEN_CLOSING: "상담 완료",
     }
     with st.sidebar:
-        st.markdown("**진행 단계**")
+        st.markdown('<div class="sidebar-eyebrow">진행 단계</div>', unsafe_allow_html=True)
         render_stepper(steps, screen)
-        st.markdown("---")
-        st.caption(f"데모 기준일: **{cfg.DEMO_AS_OF_DATE}**")
-        st.caption("모든 데이터는 가상 Mock 데이터입니다.")
 
     # 화면 라우팅
     if screen == cfg.SCREEN_CONSULTATION:

@@ -14,6 +14,7 @@ CALL_STARTED = "CALL_STARTED"
 CALL_COMPLETED = "CALL_COMPLETED"
 SMS_SENT = "SMS_SENT"
 KAKAO_SENT = "KAKAO_SENT"
+POSTPONED = "POSTPONED"
 STT_COMPLETED = "STT_COMPLETED"
 FC_CONFIRMED = "FC_CONFIRMED"
 CRM_SAVED = "CRM_SAVED"
@@ -21,7 +22,7 @@ CALENDAR_SCHEDULED = "CALENDAR_SCHEDULED"
 FEEDBACK_STORED = "FEEDBACK_STORED"
 
 EVENT_TYPES = frozenset({
-    CALL_STARTED, CALL_COMPLETED, SMS_SENT, KAKAO_SENT, STT_COMPLETED,
+    CALL_STARTED, CALL_COMPLETED, SMS_SENT, KAKAO_SENT, POSTPONED, STT_COMPLETED,
     FC_CONFIRMED, CRM_SAVED, CALENDAR_SCHEDULED, FEEDBACK_STORED,
 })
 
@@ -61,7 +62,7 @@ class ToolExecutionResult:
 
 
 class ChannelGateway(ABC):
-    """전화·문자·카카오톡 Mock 발신 게이트웨이."""
+    """전화·문자·카카오톡 Mock 발신 및 보류(나중에) 게이트웨이."""
 
     @abstractmethod
     def start_call(self, customer_id: str, session_id: str, approved_script: str) -> ToolExecutionResult:
@@ -78,6 +79,10 @@ class ChannelGateway(ABC):
     @abstractmethod
     def send_kakao(self, customer_id: str, session_id: str, approved_script: str) -> ToolExecutionResult:
         """Safety COMPLIANT 스크립트로 Mock 카카오톡 발송."""
+
+    @abstractmethod
+    def postpone(self, customer_id: str, session_id: str) -> ToolExecutionResult:
+        """오늘의 1-Pick 연락을 보류(나중에). 스크립트 발신 없이 보류 사실만 기록."""
 
 
 class SttTool(ABC):

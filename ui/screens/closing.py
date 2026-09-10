@@ -9,7 +9,7 @@ import streamlit as st
 import src.config as cfg
 from src import demo_state
 from src.data_loader import DataLoader
-from ui.common import nfc, page_header, render_evidence, section_header
+from ui.common import humanize, nfc, page_header, render_evidence, section_header
 
 
 def _transcript_snippet(loader: DataLoader, evidenceRef: str) -> str:
@@ -43,32 +43,30 @@ def render(loader: DataLoader) -> None:
     section_header("상담 요약", first=True)
     with st.container(border=True):
         st.write(nfc(analysis.get("ai_summary", "")))
-        st.caption(
-            f"총 {len(loader.transcript)} 발화 · Runtime Conversation Analysis 결과 (Transcript 근거 기반)"
-        )
+        st.caption(f"총 {len(loader.transcript)}개 발화를 분석한 결과입니다.")
 
     # 고객 반응·관심·걱정·거절
     section_header("고객의 관심사항과 반응")
     st.markdown("**기존 보장내용 확인 요청**")
     for need in analysis["customer_needs"]:
-        st.markdown(f"- {nfc(need['need'])}")
+        st.markdown(f"- {humanize(need['need'])}")
         render_evidence(need["evidence"], label="근거", key_prefix=f"need_{need['need'][:8]}")
 
     st.markdown("**보험료 및 갱신 걱정**")
     for c in analysis["concerns"]:
-        st.markdown(f"- {nfc(c['concern'])}")
+        st.markdown(f"- {humanize(c['concern'])}")
         render_evidence(c["evidence"], label="근거", key_prefix=f"concern_{c['concern'][:8]}")
 
     st.markdown("**추가 가입 의향 / 무관심**")
     for item in analysis["rejection_or_disinterest"]:
-        st.markdown(f"- {nfc(item['item'])}")
+        st.markdown(f"- {humanize(item['item'])}")
         render_evidence(item["evidence"], label="근거", key_prefix=f"rej_{item['item'][:8]}")
 
     # 상담 결과
     section_header("고객 반응과 상담 결과")
     outcome = analysis["outcome"]
     st.markdown(
-        f'<span class="badge badge-ok">{nfc(outcome["value"])}</span> '
+        f'<span class="badge badge-ok">{humanize(outcome["value"])}</span> '
         f'후속 상담 필요: <b>{"예" if analysis["followup_requested"]["needed"] else "아니오"}</b> · '
         f'희망 일시 <b>{analysis["followup_requested"].get("preferred_datetime", "")}</b>',
         unsafe_allow_html=True,
@@ -79,10 +77,8 @@ def render(loader: DataLoader) -> None:
     section_header("CRM 상담기록 초안")
     status = crm.get("status", "DRAFT")
     phase = crm.get("phase", "FC_REVIEW")
-    auto = crm.get("auto_finalized", False)
     st.markdown(
-        f'<span class="badge badge-warn">status: <b>{status}</b> · phase: <b>{nfc(phase)}</b>'
-        f' · auto_finalized: {"true" if auto else "false"}</span>',
+        f'<span class="badge badge-warn">{humanize(status)} · {humanize(phase)}</span>',
         unsafe_allow_html=True,
     )
     st.caption(nfc(crm.get("note", "")))
@@ -91,47 +87,45 @@ def render(loader: DataLoader) -> None:
     st.markdown(
         f"""
         - **상담 유형**: {nfc(rec.get('consultation_type',''))} · **일시**: {rec.get('consultation_datetime')}
-        - **결과**: {nfc(rec.get('outcome',''))}
-        - **고객 니즈**: {', '.join(nfc(x) for x in rec.get('customer_needs', []))}
+        - **결과**: {humanize(rec.get('outcome',''))}
+        - **고객 니즈**: {', '.join(humanize(x) for x in rec.get('customer_needs', []))}
         - **관심사**: {', '.join(nfc(x) for x in rec.get('customer_interests', []))}
-        - **걱정**: {', '.join(nfc(x) for x in rec.get('concerns', []))}
-        - **무관심**: {', '.join(nfc(x) for x in rec.get('disinterest_items', []))}
+        - **걱정**: {', '.join(humanize(x) for x in rec.get('concerns', []))}
+        - **무관심**: {', '.join(humanize(x) for x in rec.get('disinterest_items', []))}
         - **후속 필요**: {'예' if rec.get('followup_needed') else '아니오'} ·
           **희망 일시**: {rec.get('preferred_datetime')}
         """
     )
-    st.markdown("**Transcript Evidence (CRM Draft)**")
+    st.markdown("**통화 근거 확인**")
     render_evidence(crm["each_field_evidence"], label="CRM 필드별 근거", key_prefix="crm")
 
-    # FC 확인 + Mock 저장 (Stage 3 Tool 연결)
-    section_header("FC 확인 및 Mock 저장")
+    # FC 확인 + 저장
+    section_header("FC 확인 및 저장")
     session_id = demo_state.get_session_id()
     results = demo_state.get_tool_results()
 
     if demo_state.is_crm_confirmed():
         st.markdown(
             '<span class="badge badge-ok">FC 확인 완료</span> '
-            '<span class="badge badge-info">CRM DRAFT / FC_REVIEW 유지</span>',
+            '<span class="badge badge-info">CRM 초안 · FC 검토 상태 유지</span>',
             unsafe_allow_html=True,
         )
-        # Mock 저장 결과 표시
-        for key, label in (("CRM_SAVED", "CRM 저장"), ("CALENDAR_SCHEDULED", "Calendar 등록"), ("FEEDBACK_STORED", "Feedback 저장")):
-            res = results.get(key)
-            if res:
-                st.markdown(
-                    f'<span class="badge badge-ok">【{label}】 성공 · '
-                    f'{res.get("result_ref") or res.get("execution_id")}</span>',
-                    unsafe_allow_html=True,
-                )
-        st.warning("실제 CRM·Calendar 시스템에는 저장되지 않았습니다. 모든 기록은 data/runtime/demo.db 의 Mock 데이터입니다.")
-        if st.button("Demo 초기화 (내 기록만)", use_container_width=True):
+        # 저장 결과 표시
+        for key, label in (
+            ("CRM_SAVED", "CRM에 저장되었습니다"),
+            ("CALENDAR_SCHEDULED", "재상담 일정이 등록되었습니다"),
+            ("FEEDBACK_STORED", "추천 결과가 기록되었습니다"),
+        ):
+            if results.get(key):
+                st.markdown(f'<span class="badge badge-ok">{label}</span>', unsafe_allow_html=True)
+        if st.button("다시 시작 (내 기록만 초기화)", use_container_width=True):
             demo_state.reset_demo(all_data=False)
             st.rerun()
     else:
         st.caption("FC 확인 전에는 CRM 저장과 Calendar 등록이 차단됩니다.")
         # CRM Draft 수정 입력란 (FC 검토)
         draft_text = st.text_area(
-            "CRM Draft 메모 수정 (선택)",
+            "CRM 메모 수정 (선택)",
             value=demo_state.get_fc_draft_text() or nfc(crm.get("note", "")),
             key="fc_draft_edit",
         )
@@ -151,7 +145,7 @@ def render(loader: DataLoader) -> None:
                     **crm,
                     "crm_record": fc_draft,
                 },
-                calendar_title=calendar.get("title", "재상담 (Mock)"),
+                calendar_title=calendar.get("title", "재상담"),
                 calendar_due_datetime=cal_due,
                 fc_action="ACCEPTED" if not draft_text or draft_text == nfc(crm.get("note", "")) else "EDITED",
                 safety_result={"decision": "COMPLIANT"},
@@ -161,19 +155,19 @@ def render(loader: DataLoader) -> None:
             if out.get("success"):
                 demo_state.set_crm_confirmed(True)
             st.rerun()
-        st.caption("버튼 클릭 시 Mock CRM 저장 → Mock Calendar 등록 → Feedback 저장이 순서대로 실행됩니다.")
+        st.caption("버튼을 클릭하면 CRM 저장 → 재상담 일정 등록 → 추천 결과 기록이 순서대로 처리됩니다.")
 
     # Next Action
-    section_header("Next Action")
+    section_header("다음 할 일")
     for act in next_actions:
         st.markdown(
-            f"- **[{nfc(act['action_type'])}]** {nfc(act['title'])} — "
-            f"due: {act.get('due_datetime')} · 상태: {nfc(act.get('status',''))}"
+            f"- **{nfc(act['title'])}** — "
+            f"예정일 {act.get('due_datetime')} · 상태: {humanize(act.get('status',''))}"
         )
-    st.markdown("**캘린더 후보**")
+    st.markdown("**재상담 일정 후보**")
     st.markdown(
         f"- {nfc(calendar.get('title',''))} — {calendar.get('due_datetime')} "
-        f"({calendar.get('duration_minutes')}분) · 상태: {nfc(calendar.get('status',''))}"
+        f"({calendar.get('duration_minutes')}분) · 상태: {humanize(calendar.get('status',''))}"
     )
     render_evidence(calendar.get("evidence"), label="캘린더 근거", key_prefix="cal")
 
@@ -182,7 +176,7 @@ def render(loader: DataLoader) -> None:
     if st.button("처음으로 돌아가기", use_container_width=True):
         demo_state.reset_to_daily_pick()
         st.rerun()
-    if st.button("Demo 초기화 (내 실행 기록 재시작)", use_container_width=True):
+    if st.button("처음부터 다시 시작", use_container_width=True):
         demo_state.reset_demo(all_data=True)
         st.rerun()
-    st.caption("Demo 초기화는 현재 세션의 Mock 실행 데이터만 삭제합니다. 고객 Seed·Expected·Knowledge 문서는 유지됩니다.")
+    st.caption("초기화하면 현재 세션의 실행 기록만 삭제됩니다. 고객 데이터와 지식 문서는 유지됩니다.")
