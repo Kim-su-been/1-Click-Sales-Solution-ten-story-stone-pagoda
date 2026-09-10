@@ -331,6 +331,7 @@
 | `CALL_COMPLETED` | Mock 전화 종료 | channel_gateway.complete_call |
 | `SMS_SENT` | Mock 문자 발송 | channel_gateway.send_sms |
 | `KAKAO_SENT` | Mock 카카오톡 발송 | channel_gateway.send_kakao |
+| `POSTPONED` | 오늘의 1-Pick 연락 보류(나중에) | channel_gateway.postpone |
 | `STT_COMPLETED` | Mock STT 완료 (transcript 반환) | stt.transcribe |
 | `FC_CONFIRMED` | FC 확인 완료 | orchestrator.confirm_and_execute |
 | `CRM_SAVED` | Mock CRM 저장 | crm.save_confirmed_draft |

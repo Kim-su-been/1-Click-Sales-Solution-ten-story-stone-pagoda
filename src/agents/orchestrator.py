@@ -393,6 +393,16 @@ def send_mock_kakao(
     return gw.send_kakao(customer_id, session_id, approved_script)
 
 
+def postpone_pick(
+    session_id: str, customer_id: str, db: RuntimeDB | None = None,
+) -> _tool_iface.ToolExecutionResult:
+    """오늘의 1-Pick: 연락 보류 (Mock, POSTPONED). 오늘은 이 고객에게 연락하지 않는다."""
+    from src.tools.mock_channel import MockChannelGateway
+
+    gw = MockChannelGateway(db=db)
+    return gw.postpone(customer_id, session_id)
+
+
 def process_mock_stt(session_id: str, db: RuntimeDB | None = None) -> _tool_iface.ToolExecutionResult:
     """Mock STT: data/demo/consultation-transcript.txt 반환 (STT_COMPLETED)."""
     from src.tools.mock_stt import MockSttTool

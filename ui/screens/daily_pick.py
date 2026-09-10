@@ -111,13 +111,18 @@ def render(loader: DataLoader) -> None:
 
     # --- 채널 버튼 ---
     section_header("연락 채널 (Mock)")
-    c1, c2, c3 = st.columns(3)
+    c1, c2, c3, c4 = st.columns(4)
     call_script = call["text"]
     sms_script = scripts["SMS"]["text"]
     kakao_script = scripts["KAKAO"]["text"]
     session_id = demo_state.get_session_id()
 
-    from src.agents.orchestrator import start_mock_call, send_mock_sms, send_mock_kakao
+    from src.agents.orchestrator import (
+        postpone_pick,
+        send_mock_kakao,
+        send_mock_sms,
+        start_mock_call,
+    )
 
     if c1.button("전화하기", use_container_width=True, type="primary"):
         res = start_mock_call(session_id, cust_id, call_script)
@@ -163,6 +168,18 @@ def render(loader: DataLoader) -> None:
             unsafe_allow_html=True,
         )
         st.caption("카카오톡 발송(Mock) — 실제 발송이 아니며 실행 기록만 생성됩니다.")
+
+    if c4.button("나중에", use_container_width=True):
+        res = postpone_pick(session_id, cust_id)
+        demo_state.set_tool_result("POSTPONED", res.to_dict())
+        st.rerun()
+    postpone_res = demo_state.get_tool_results().get("POSTPONED")
+    if postpone_res:
+        st.markdown(
+            f'<span class="badge badge-info">POSTPONED · exec {postpone_res.get("execution_id","")}</span>',
+            unsafe_allow_html=True,
+        )
+        st.caption("오늘은 이 고객에게 연락하지 않기로 보류했습니다. (Mock 기록만 저장, 다음 1-Pick 추천에 반영됩니다.)")
 
     if st.session_state.get("_show_sms"):
         st.markdown("**문자 초안 (Mock — 실제 발송 안 함)**")
