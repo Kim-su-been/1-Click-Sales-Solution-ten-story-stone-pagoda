@@ -66,26 +66,29 @@ def render(loader: DataLoader) -> None:
         if not active:
             st.caption("전화 연결 후 이 화면으로 이동했습니다.")
 
-    # 통화 녹취록
+    # 통화 녹취록 — 통화 연결 후 자동으로 텍스트 변환됨 (실제 상담 흐름과 동일하게 수동 클릭 없이 진행)
     section_header("통화 녹취록")
-    stt_res = demo_state.get_tool_results().get("STT_COMPLETED")
-    if st.button("녹취록 불러오기", use_container_width=True):
-        session_id = demo_state.get_session_id()
-        from src.agents.orchestrator import process_mock_stt
+    if demo_state.is_call_active() and not demo_state.is_transcript_loaded():
+        with st.spinner("통화 내용을 텍스트로 변환하는 중입니다..."):
+            import time
 
-        res = process_mock_stt(session_id)
-        demo_state.set_tool_result("STT_COMPLETED", res.to_dict())
-        if res.success:
-            demo_state.set_transcript_loaded(True)
-        else:
-            st.error(f"녹취록을 불러올 수 없습니다: {res.error_message}")
+            time.sleep(0.6)
+            session_id = demo_state.get_session_id()
+            from src.agents.orchestrator import process_mock_stt
+
+            res = process_mock_stt(session_id)
+            demo_state.set_tool_result("STT_COMPLETED", res.to_dict())
+            if res.success:
+                demo_state.set_transcript_loaded(True)
+            else:
+                st.error(f"녹취록을 불러올 수 없습니다: {res.error_message}")
         st.rerun()
 
     if demo_state.is_transcript_loaded():
         st.code(loader.utter_text(), language=None)
         st.caption(f"총 {len(loader.transcript)}개 발화가 텍스트로 변환되었습니다.")
     else:
-        st.caption("버튼을 누르면 통화 녹취록이 텍스트로 변환되어 표시됩니다.")
+        st.caption("통화가 연결되면 녹취록이 자동으로 텍스트로 변환됩니다.")
 
     # 상담 완료 및 분석하기
     st.markdown("---")

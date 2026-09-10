@@ -136,13 +136,38 @@ def render(loader: DataLoader) -> None:
     )
 
     results_now = demo_state.get_tool_results()
-    # 문자/카톡/나중에는 "오늘의 1-Pick에 대해 취한 조치 1건"이라는 같은 성격의 행동이라
-    # 동시에 두 개가 완료 상태로 남으면(예: 카톡 발송 후 나중에) 화면이 모순되어 보인다.
-    # 셋 중 하나가 이미 기록되어 있으면 그 결과만 보여주고 나머지 선택지는 잠근다.
-    channel_action = next(
-        (k for k in ("SMS_SENT", "KAKAO_SENT", "POSTPONED") if results_now.get(k, {}).get("success")),
-        None,
-    )
+    sms_sent = bool(results_now.get("SMS_SENT", {}).get("success"))
+    kakao_sent = bool(results_now.get("KAKAO_SENT", {}).get("success"))
+    postponed = bool(results_now.get("POSTPONED", {}).get("success"))
+    contacted = sms_sent or kakao_sent  # 문자/카톡은 채널이 다르므로 둘 다 보낼 수 있다.
+
+    @st.dialog("문자 발송")
+    def _confirm_sms() -> None:
+        st.write(f"**{nfc(cust.name)} 고객님**에게 아래 문자를 보내시겠습니까?")
+        st.write(nfc(sms_script))
+        b1, b2 = st.columns(2)
+        if b1.button("보내기", type="primary", use_container_width=True, key="sms_confirm_send"):
+            res = send_mock_sms(session_id, cust_id, sms_script)
+            demo_state.set_tool_result("SMS_SENT", res.to_dict())
+            if not res.success:
+                st.error(f"문자를 보낼 수 없습니다: {res.error_message}")
+            st.rerun()
+        if b2.button("취소", use_container_width=True, key="sms_confirm_cancel"):
+            st.rerun()
+
+    @st.dialog("카카오톡 발송")
+    def _confirm_kakao() -> None:
+        st.write(f"**{nfc(cust.name)} 고객님**에게 아래 카카오톡을 보내시겠습니까?")
+        st.write(nfc(kakao_script))
+        b1, b2 = st.columns(2)
+        if b1.button("보내기", type="primary", use_container_width=True, key="kakao_confirm_send"):
+            res = send_mock_kakao(session_id, cust_id, kakao_script)
+            demo_state.set_tool_result("KAKAO_SENT", res.to_dict())
+            if not res.success:
+                st.error(f"카카오톡을 보낼 수 없습니다: {res.error_message}")
+            st.rerun()
+        if b2.button("취소", use_container_width=True, key="kakao_confirm_cancel"):
+            st.rerun()
 
     c1, c2, c3, c4 = st.columns(4)
     if c1.button("전화하기", use_container_width=True, type="primary"):
@@ -155,26 +180,19 @@ def render(loader: DataLoader) -> None:
             st.error(f"전화를 시작할 수 없습니다: {res.error_message}")
         st.rerun()
 
-    if c2.button("문자 발송", use_container_width=True, disabled=channel_action not in (None, "SMS_SENT")):
-        res = send_mock_sms(session_id, cust_id, sms_script)
-        demo_state.set_tool_result("SMS_SENT", res.to_dict())
-        if not res.success:
-            st.error(f"문자를 보낼 수 없습니다: {res.error_message}")
-        st.rerun()
+    # 문자/카톡은 서로 함께 보낼 수 있지만, "나중에(오늘은 연락 안 함)"와는 배타적이다.
+    if c2.button("문자 발송", use_container_width=True, disabled=postponed or sms_sent):
+        _confirm_sms()
 
-    if c3.button("카카오톡 발송", use_container_width=True, disabled=channel_action not in (None, "KAKAO_SENT")):
-        res = send_mock_kakao(session_id, cust_id, kakao_script)
-        demo_state.set_tool_result("KAKAO_SENT", res.to_dict())
-        if not res.success:
-            st.error(f"카카오톡을 보낼 수 없습니다: {res.error_message}")
-        st.rerun()
+    if c3.button("카카오톡 발송", use_container_width=True, disabled=postponed or kakao_sent):
+        _confirm_kakao()
 
-    if c4.button("나중에", use_container_width=True, disabled=channel_action not in (None, "POSTPONED")):
+    if c4.button("나중에", use_container_width=True, disabled=contacted or postponed):
         res = postpone_pick(session_id, cust_id)
         demo_state.set_tool_result("POSTPONED", res.to_dict())
         st.rerun()
 
-    if channel_action == "SMS_SENT":
+    if sms_sent:
         with st.container(border=True):
             st.markdown(f"**{nfc(cust.name)} 고객님에게 문자를 보냈습니다.**")
             st.write(nfc(sms_script))
@@ -182,7 +200,8 @@ def render(loader: DataLoader) -> None:
         if st.button("다시 선택하기", key="reset_channel_sms"):
             results_now.pop("SMS_SENT", None)
             st.rerun()
-    elif channel_action == "KAKAO_SENT":
+
+    if kakao_sent:
         with st.container(border=True):
             st.markdown(f"**{nfc(cust.name)} 고객님에게 카카오톡을 보냈습니다.**")
             st.write(nfc(kakao_script))
@@ -190,7 +209,8 @@ def render(loader: DataLoader) -> None:
         if st.button("다시 선택하기", key="reset_channel_kakao"):
             results_now.pop("KAKAO_SENT", None)
             st.rerun()
-    elif channel_action == "POSTPONED":
+
+    if postponed:
         with st.container(border=True):
             st.markdown(f"**오늘은 {nfc(cust.name)} 고객님에게 연락하지 않기로 했습니다.**")
             st.caption("이 선택은 다음 1-Pick 추천에 반영됩니다.")

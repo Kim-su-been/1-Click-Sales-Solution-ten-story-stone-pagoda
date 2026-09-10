@@ -76,7 +76,7 @@ def inject_css() -> None:
         .logo-banner img { height: 26px; display: block; }
 
         /* --- 사이드바 --- */
-        [data-testid="stSidebarContent"] { padding-top: 1.75rem; }
+        [data-testid="stSidebarContent"] { padding-top: 0.75rem; }
         .sidebar-eyebrow { font-size: 0.74rem; font-weight: 700; letter-spacing: .05em;
             color: var(--ink-tertiary); text-transform: uppercase; margin: 0 0 10px 1px; }
 

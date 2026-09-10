@@ -200,14 +200,18 @@ def _parse_followup(member_turns: list[Turn]) -> tuple[bool, str | None, Turn | 
 # 4) AI 요약 (규칙 기반 문장 생성 — Golden Expected 와 동작 의미 동일)
 # ---------------------------------------------------------------------------
 def _build_summary(customer_name: str, renewal_date: str, preferred: str) -> str:
-    d = date.fromisoformat(DEMO_AS_OF_DATE)
-    pref = date.fromisoformat(preferred[:10]) if preferred else None
-    pref_txt = f"{preferred[:10]} 오후 재상담" if preferred else "재상담 조율 필요"
+    pref_txt = (
+        f"{preferred[:10]} 오후에 다시 연락드려 자세히 안내해 드리기로 약속했습니다."
+        if preferred
+        else "다음 상담 일정은 추후 다시 조율이 필요합니다."
+    )
     return (
-        f"{customer_name} 고객은 갱신형 특약 갱신({renewal_date}) 안내를 들은 후, "
-        f"기존 계약(종신보험·갱신형 특약)의 보장내용 점검을 희망했다. "
-        f"갱신 후 보험료 변동에 대한 걱정을 표현했으며, 추가 가입 의향은 낮고 "
-        f"치아보험에는 관심이 없다. {pref_txt}을 약속했다."
+        f"{customer_name} 고객님께 갱신형 특약의 갱신 예정일({renewal_date})을 사전에 안내드렸습니다. "
+        f"안내를 받으신 뒤, 새로 가입하기보다는 지금 가입 중인 계약(종신보험·갱신형 특약)의 "
+        f"보장 내용을 먼저 다시 점검하고 싶다는 의사를 밝히셨습니다.\n\n"
+        f"갱신 시점에 보험료가 재산정될 수 있다는 부분에는 다소 부담을 느끼시는 듯했습니다. "
+        f"다만 신규 가입 의향은 높지 않으셨고, 특히 치아보험에는 관심이 없다고 명확히 말씀해 주셨습니다.\n\n"
+        f"{pref_txt}"
     )
 
 
@@ -375,11 +379,33 @@ def run_conversation_analysis(
     )
 
 
-def build_crm_record_envelope(crm_draft: dict[str, Any]) -> dict[str, Any]:
-    """crm-record-expected.json 의 최상위 envelope(상태 필드 + 각 필드 근거) 생성."""
+def build_crm_record_envelope(
+    crm_draft: dict[str, Any], analysis: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """crm-record-expected.json 의 최상위 envelope(상태 필드 + 각 필드 근거) 생성.
+
+    analysis 가 주어지면 outcome/followup/니즈/관심사/걱정/무관심 각각의
+    Transcript 근거를 each_field_evidence 에 채운다 (필드별 근거 확인용).
+    """
     each_field_evidence: list[dict[str, Any]] = []
-    if "outcome" in crm_draft and crm_draft.get("_outcome_evidence"):
-        each_field_evidence.append({"field": "outcome", "evidence": crm_draft.pop("_outcome_evidence")})
+    if analysis:
+        def _add(field_name: str, ev: dict[str, Any] | None) -> None:
+            # render_evidence()는 evidenceType/evidenceRef/evidenceText가 최상위에 있는
+            # flat dict를 기대하므로 {"field": ..., "evidence": {...}} 로 감싸지 않는다.
+            if ev:
+                each_field_evidence.append({**ev, "field": field_name})
+
+        _add("outcome", analysis.get("outcome", {}).get("evidence"))
+        _add("followup_requested", analysis.get("followup_requested", {}).get("evidence"))
+        for n in analysis.get("customer_needs", []):
+            _add("customer_needs", n.get("evidence"))
+        for i in analysis.get("customer_interests", []):
+            _add("customer_interests", i.get("evidence"))
+        for c in analysis.get("concerns", []):
+            _add("concerns", c.get("evidence"))
+        for d in analysis.get("rejection_or_disinterest", []):
+            _add("disinterest_items", d.get("evidence"))
+
     return {
         "demo_as_of_date": DEMO_AS_OF_DATE,
         "status": CrmStatus.DRAFT,
@@ -388,5 +414,5 @@ def build_crm_record_envelope(crm_draft: dict[str, Any]) -> dict[str, Any]:
         "crm_record": crm_draft,
         "each_field_evidence": each_field_evidence,
         "fc_confirm_required": FcConfirmation.REQUIRED,
-        "note": "CRM 기록은 초안(DRAFT)이며 FC 확인 후 저장(SAVED)된다.",
+        "note": crm_draft.get("ai_summary", ""),
     }

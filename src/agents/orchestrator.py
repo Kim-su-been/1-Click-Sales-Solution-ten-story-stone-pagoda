@@ -237,7 +237,7 @@ def run_pipeline(inp: PipelineInput, saved_transcript: str | None = None) -> Orc
     if not _assert_transition(state, WorkflowState.CRM_DRAFT, errors):
         return _error_result(errors, steps, state)
     state = WorkflowState.CRM_DRAFT
-    crm_envelope = build_crm_record_envelope(dict(ca.crm_draft))
+    crm_envelope = build_crm_record_envelope(dict(ca.crm_draft), ca.analysis)
     steps.append(StepResult(
         state=state,
         step_name="crm_draft",
