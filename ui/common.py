@@ -65,7 +65,7 @@ def inject_css() -> None:
             --shadow-card: 0 1px 2px rgba(15,23,42,0.04), 0 6px 20px rgba(15,23,42,0.06);
         }
 
-        [data-testid="stAppViewContainer"] .block-container { padding-top: 4rem; max-width: 900px; }
+        [data-testid="stAppViewContainer"] .block-container { padding-top: 4rem; max-width: 1120px; }
         html, body, [class*="css"] { color: var(--ink); }
 
         h1 { font-size: 1.3rem !important; }

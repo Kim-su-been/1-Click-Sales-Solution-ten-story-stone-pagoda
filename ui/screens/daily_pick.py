@@ -122,8 +122,7 @@ def render(loader: DataLoader) -> None:
                 render_evidence(se, label="문장 근거", key_prefix=f"cs_{se['sentence'][:10]}")
 
     # --- 채널 버튼 ---
-    section_header("연락 채널 (Mock)")
-    c1, c2, c3, c4 = st.columns(4)
+    section_header("연락 채널")
     call_script = call["text"]
     sms_script = scripts["SMS"]["text"]
     kakao_script = scripts["KAKAO"]["text"]
@@ -136,6 +135,16 @@ def render(loader: DataLoader) -> None:
         start_mock_call,
     )
 
+    results_now = demo_state.get_tool_results()
+    # 문자/카톡/나중에는 "오늘의 1-Pick에 대해 취한 조치 1건"이라는 같은 성격의 행동이라
+    # 동시에 두 개가 완료 상태로 남으면(예: 카톡 발송 후 나중에) 화면이 모순되어 보인다.
+    # 셋 중 하나가 이미 기록되어 있으면 그 결과만 보여주고 나머지 선택지는 잠근다.
+    channel_action = next(
+        (k for k in ("SMS_SENT", "KAKAO_SENT", "POSTPONED") if results_now.get(k, {}).get("success")),
+        None,
+    )
+
+    c1, c2, c3, c4 = st.columns(4)
     if c1.button("전화하기", use_container_width=True, type="primary"):
         res = start_mock_call(session_id, cust_id, call_script)
         demo_state.set_tool_result("CALL_STARTED", res.to_dict())
@@ -145,67 +154,49 @@ def render(loader: DataLoader) -> None:
         else:
             st.error(f"전화를 시작할 수 없습니다: {res.error_message}")
         st.rerun()
-    result = demo_state.get_tool_results().get("CALL_STARTED")
-    if result:
-        st.markdown(
-            f'<span class="badge badge-ok">CALL_STARTED · exec {result.get("execution_id","")}</span>',
-            unsafe_allow_html=True,
-        )
-        st.caption("실제 전화 발신이 아니며 Mock 실행 기록만 저장됩니다.")
 
-    if c2.button("문자 발송 (Mock)", use_container_width=True):
+    if c2.button("문자 발송", use_container_width=True, disabled=channel_action not in (None, "SMS_SENT")):
         res = send_mock_sms(session_id, cust_id, sms_script)
         demo_state.set_tool_result("SMS_SENT", res.to_dict())
+        if not res.success:
+            st.error(f"문자를 보낼 수 없습니다: {res.error_message}")
         st.rerun()
-    sms_res = demo_state.get_tool_results().get("SMS_SENT")
-    if sms_res:
-        st.markdown(
-            f'<span class="badge badge-ok">SMS_SENT · exec {sms_res.get("execution_id","")}</span>'
-            if sms_res.get("success")
-            else f'<span class="badge badge-warn">SMS 차단 · {sms_res.get("error_message","")}</span>',
-            unsafe_allow_html=True,
-        )
-        st.caption("문자 발송(Mock) — 실제 발송이 아니며 실행 기록만 생성됩니다.")
 
-    if c3.button("카카오톡 발송 (Mock)", use_container_width=True):
+    if c3.button("카카오톡 발송", use_container_width=True, disabled=channel_action not in (None, "KAKAO_SENT")):
         res = send_mock_kakao(session_id, cust_id, kakao_script)
         demo_state.set_tool_result("KAKAO_SENT", res.to_dict())
+        if not res.success:
+            st.error(f"카카오톡을 보낼 수 없습니다: {res.error_message}")
         st.rerun()
-    kakao_res = demo_state.get_tool_results().get("KAKAO_SENT")
-    if kakao_res:
-        st.markdown(
-            f'<span class="badge badge-ok">KAKAO_SENT · exec {kakao_res.get("execution_id","")}</span>'
-            if kakao_res.get("success")
-            else f'<span class="badge badge-warn">카톡 차단 · {kakao_res.get("error_message","")}</span>',
-            unsafe_allow_html=True,
-        )
-        st.caption("카카오톡 발송(Mock) — 실제 발송이 아니며 실행 기록만 생성됩니다.")
 
-    if c4.button("나중에", use_container_width=True):
+    if c4.button("나중에", use_container_width=True, disabled=channel_action not in (None, "POSTPONED")):
         res = postpone_pick(session_id, cust_id)
         demo_state.set_tool_result("POSTPONED", res.to_dict())
         st.rerun()
-    postpone_res = demo_state.get_tool_results().get("POSTPONED")
-    if postpone_res:
-        st.markdown(
-            f'<span class="badge badge-info">POSTPONED · exec {postpone_res.get("execution_id","")}</span>',
-            unsafe_allow_html=True,
-        )
-        st.caption("오늘은 이 고객에게 연락하지 않기로 보류했습니다. (Mock 기록만 저장, 다음 1-Pick 추천에 반영됩니다.)")
 
-    if st.session_state.get("_show_sms"):
-        st.markdown("**문자 초안 (Mock — 실제 발송 안 함)**")
-        st.write(nfc(sms_script))
-        render_evidence(scripts["SMS"]["sentence_evidence"], label="문자 초안 근거", key_prefix="sms")
-
-    if st.session_state.get("_show_kakao"):
-        st.markdown("**카카오톡 초안 (Mock — 실제 발송 안 함)**")
-        st.write(nfc(kakao_script))
-        render_evidence(scripts["KAKAO"]["sentence_evidence"], label="카카오톡 초안 근거", key_prefix="kakao")
-
-    # 가상 데이터 고지(하단)
-    st.markdown("---")
-    st.caption(f"기준일: {cfg.DEMO_AS_OF_DATE} 기준 · 모든 값은 Demo Mock 데이터입니다.")
+    if channel_action == "SMS_SENT":
+        with st.container(border=True):
+            st.markdown(f"**{nfc(cust.name)} 고객님에게 문자를 보냈습니다.**")
+            st.write(nfc(sms_script))
+            render_evidence(scripts["SMS"]["sentence_evidence"], label="문자 근거 보기", key_prefix="sms")
+        if st.button("다시 선택하기", key="reset_channel_sms"):
+            results_now.pop("SMS_SENT", None)
+            st.rerun()
+    elif channel_action == "KAKAO_SENT":
+        with st.container(border=True):
+            st.markdown(f"**{nfc(cust.name)} 고객님에게 카카오톡을 보냈습니다.**")
+            st.write(nfc(kakao_script))
+            render_evidence(scripts["KAKAO"]["sentence_evidence"], label="카카오톡 근거 보기", key_prefix="kakao")
+        if st.button("다시 선택하기", key="reset_channel_kakao"):
+            results_now.pop("KAKAO_SENT", None)
+            st.rerun()
+    elif channel_action == "POSTPONED":
+        with st.container(border=True):
+            st.markdown(f"**오늘은 {nfc(cust.name)} 고객님에게 연락하지 않기로 했습니다.**")
+            st.caption("이 선택은 다음 1-Pick 추천에 반영됩니다.")
+        if st.button("다시 선택하기", key="reset_channel_postpone"):
+            results_now.pop("POSTPONED", None)
+            st.rerun()
 
     # --- Stage 2 Runtime 패널: 판매 흐름과 분리된 검증용 패널 ---
     with st.expander("기능 검증 정보 — Stage 2 Runtime (Orchestrator)"):
