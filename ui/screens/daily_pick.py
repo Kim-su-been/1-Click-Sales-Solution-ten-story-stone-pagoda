@@ -89,7 +89,9 @@ def render(loader: DataLoader) -> None:
     )
     if ineligible:
         excluded_text = ", ".join(
-            f"{cid} ({EXCLUSION_REASON_LABELS.get(reason, reason)})" for cid, reason in ineligible
+            f"{nfc(loader.get_customer(cid).name)} 고객님({cid}) · "
+            f"{EXCLUSION_REASON_LABELS.get(reason, reason)}"
+            for cid, reason in ineligible
         )
         st.caption(f"이번에 제외된 고객 {len(ineligible)}명: {excluded_text}")
 

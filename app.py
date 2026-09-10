@@ -33,7 +33,7 @@ def main() -> None:
         cfg.SCREEN_CLOSING: "상담 완료",
     }
     with st.sidebar:
-        st.markdown("**진행 단계**")
+        st.markdown('<div class="sidebar-eyebrow">진행 단계</div>', unsafe_allow_html=True)
         render_stepper(steps, screen)
         st.markdown("---")
         st.caption(f"데모 기준일: **{cfg.DEMO_AS_OF_DATE}**")

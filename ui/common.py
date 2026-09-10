@@ -70,9 +70,15 @@ def inject_css() -> None:
 
         h1 { font-size: 1.3rem !important; }
 
-        /* --- 상단 로고 배너 --- */
-        .logo-banner { padding: 2px 0 16px 0; margin-bottom: 12px; border-bottom: 1px solid var(--line); }
-        .logo-banner img { height: 30px; display: block; }
+        /* --- 상단 로고 배너 (우측 정렬) --- */
+        .logo-banner { display: flex; justify-content: flex-end;
+            padding: 2px 0 16px 0; margin-bottom: 12px; border-bottom: 1px solid var(--line); }
+        .logo-banner img { height: 26px; display: block; }
+
+        /* --- 사이드바 --- */
+        [data-testid="stSidebarContent"] { padding-top: 1.75rem; }
+        .sidebar-eyebrow { font-size: 0.74rem; font-weight: 700; letter-spacing: .05em;
+            color: var(--ink-tertiary); text-transform: uppercase; margin: 0 0 10px 1px; }
 
         /* --- 페이지 헤더 --- */
         .page-eyebrow { font-size: 0.78rem; font-weight: 600; color: var(--accent);
