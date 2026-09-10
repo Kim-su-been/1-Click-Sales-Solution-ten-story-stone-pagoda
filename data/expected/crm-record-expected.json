@@ -1,0 +1,57 @@
+{
+  "demo_as_of_date": "2026-09-09",
+  "status": "DRAFT",
+  "phase": "FC_REVIEW",
+  "auto_finalized": false,
+  "crm_record": {
+    "customer_id": "CUST-001",
+    "customer_name": "김동양",
+    "consultation_type": "TEL",
+    "consultation_datetime": "2026-09-09T11:00:00",
+    "outcome": "상담_성공",
+    "customer_needs": ["기존 계약 보장내용 점검", "갱신 조건 사전 확인"],
+    "customer_interests": ["기존 계약(종신보험·갱신형 특약) 보장내용"],
+    "rejection_reason": null,
+    "disinterest_items": ["추가가입_의향_낮음", "치아보험_무관심"],
+    "concerns": ["갱신_보험료_부담"],
+    "followup_needed": true,
+    "preferred_datetime": "2026-09-17T14:00:00",
+    "ai_summary": "김동양 고객은 갱신형 특약 갱신(2026-10-11) 안내를 들은 후, 기존 계약(종신보험·갱신형 특약)의 보장내용 점검을 희망했다. 갱신 후 보험료 변동에 대한 걱정을 표현했으며, 추가 가입 의향은 낮고 치아보험에는 관심이 없다. 다음 주 목요일(2026-09-17) 오후 재상담을 약속했다."
+  },
+  "each_field_evidence": [
+    {
+      "field": "outcome",
+      "evidence": {
+        "evidenceType": "TRANSCRIPT",
+        "evidenceRef": "data/demo/consultation-transcript.txt#spk:17",
+        "evidenceText": "[FC-001] 네, 감사합니다. 다음 주 목요일 오후에 다시 연락드리겠습니다."
+      }
+    },
+    {
+      "field": "customer_needs",
+      "evidence": {
+        "evidenceType": "TRANSCRIPT",
+        "evidenceRef": "data/demo/consultation-transcript.txt#spk:6",
+        "evidenceText": "[CUST-001] 그런데 저는 제가 가입한 보험이 정확히 뭘 보장하는지 잘 모르고 있어요. 가입한 보험에서 입원하면 얼마나 보장되는지 정리해서 알려주실 수 있어요?"
+      }
+    },
+    {
+      "field": "customer_interests",
+      "evidence": {
+        "evidenceType": "TRANSCRIPT",
+        "evidenceRef": "data/demo/consultation-transcript.txt#spk:6",
+        "evidenceText": "[CUST-001] 그런데 저는 제가 가입한 보험이 정확히 뭘 보장하는지 잘 모르고 있어요. 가입한 보험에서 입원하면 얼마나 보장되는지 정리해서 알려주실 수 있어요?"
+      }
+    },
+    {
+      "field": "preferred_datetime",
+      "evidence": {
+        "evidenceType": "TRANSCRIPT",
+        "evidenceRef": "data/demo/consultation-transcript.txt#spk:14",
+        "evidenceText": "[CUST-001] 그럼 다음 주 목요일 오후에 다시 연락 주시면, 그때 보장 내용을 자세히 설명받고 싶어요."
+      }
+    }
+  ],
+  "fc_confirm_required": true,
+  "note": "CRM 기록은 초안(DRAFT)이며 FC 확인 후 저장(SAVED)된다."
+}

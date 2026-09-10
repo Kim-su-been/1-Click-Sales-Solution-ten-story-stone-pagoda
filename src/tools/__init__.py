@@ -1,0 +1,1 @@
+"""src/tools — Mock Tool 패키지 (전화·문자·카카오톡·STT·CRM·Calendar·Feedback·Execution Log)."""

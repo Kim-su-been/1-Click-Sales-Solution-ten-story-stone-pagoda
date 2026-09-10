@@ -1,0 +1,57 @@
+{
+  "demo_as_of_date": "2026-09-09",
+  "next_actions": [
+    {
+      "action_id": "ACT-001",
+      "action_type": "FOLLOWUP_CONSULTATION",
+      "title": "김동양 고객 재상담(기존 계약 보장내용 점검)",
+      "due_datetime": "2026-09-17T14:00:00",
+      "status": "SUGGESTED",
+      "evidence": {
+        "evidenceType": "TRANSCRIPT",
+        "evidenceRef": "data/demo/consultation-transcript.txt#spk:14",
+        "evidenceText": "[CUST-001] 그럼 다음 주 목요일 오후에 다시 연락 주시면, 그때 보장 내용을 자세히 설명받고 싶어요."
+      }
+    },
+    {
+      "action_id": "ACT-002",
+      "action_type": "PREPARE_COVERAGE_SUMMARY",
+      "title": "다음 상담용 기존 계약 보장내역 정리 자료 준비",
+      "due_datetime": "2026-09-16T18:00:00",
+      "status": "SUGGESTED",
+      "evidence": {
+        "evidenceType": "TRANSCRIPT",
+        "evidenceRef": "data/demo/consultation-transcript.txt#spk:6",
+        "evidenceText": "[CUST-001] 그런데 저는 제가 가입한 보험이 정확히 뭘 보장하는지 잘 모르고 있어요. 가입한 보험에서 입원하면 얼마나 보장되는지 정리해서 알려주실 수 있어요?"
+      }
+    },
+    {
+      "action_id": "ACT-003",
+      "action_type": "REVIEW_RENEWAL_PREM_NOTICE",
+      "title": "갱신형 특약 갱신(2026-10-11) 사전 안내 자료 확인 및 보험료 재산정 안내 준비",
+      "due_datetime": "2026-09-24T18:00:00",
+      "status": "SUGGESTED",
+      "evidence": {
+        "evidenceType": "TRANSCRIPT",
+        "evidenceRef": "data/demo/consultation-transcript.txt#spk:8",
+        "evidenceText": "[CUST-001] 네, 감사합니다. 그런데 갱신되면 보험료가 오른다고 들었는데 걱정이 되네요."
+      }
+    }
+  ],
+  "calendar_candidate": {
+    "title": "김동양 고객 재상담(보장내용 점검)",
+    "due_datetime": "2026-09-17T14:00:00",
+    "duration_minutes": 30,
+    "status": "PENDING_FC_CONFIRM",
+    "evidence": {
+      "evidenceType": "TRANSCRIPT",
+      "evidenceRef": "data/demo/consultation-transcript.txt#spk:14",
+      "evidenceText": "[CUST-001] 그럼 다음 주 목요일 오후에 다시 연락 주시면, 그때 보장 내용을 자세히 설명받고 싶어요."
+    }
+  },
+  "notes": [
+    "due_datetime 은 2026-09-17 오후(희망 일시) 로 설정.",
+    "모든 Next Action은 SUGGESTED 상태이며 FC 확인 후 등록된다.",
+    "갱신 사전 안내(ACT-003)는 D-32(2026-10-11) 기준 30일 전 이전에 안내될 수 있도록 2026-09-24 목표로 배치."
+  ]
+}

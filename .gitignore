@@ -1,0 +1,10 @@
+# Runtime 생성 파일 (Mock DB)
+data/runtime/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Streamlit 로그
+.st_test.log

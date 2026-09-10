@@ -1,0 +1,52 @@
+{
+  "demo_as_of_date": "2026-09-09",
+  "scenario": "SAFETY_REJECT",
+  "rejected_script": {
+    "text": "지금 바꾸지 않으면 보장이 크게 줄어듭니다. 이 상품은 보험료가 절대 오르지 않습니다. 세상에서 가장 좋은 보장입니다.",
+    "violations": [
+      {
+        "sentence": "지금 바꾸지 않으면 보장이 크게 줄어듭니다.",
+        "violation_type": "THREAT_PRESSURE",
+        "issue": "해지를 부추기는 위협·불안 조성 표현으로, 판매 시 유의사항(금지 표현)을 위반하며 근거 문서에 없는 주장이다.",
+        "evidenceType": "KNOWLEDGE_DOCUMENT",
+        "evidenceRef": "data/knowledge/sales-cautions.md#safety-forbidden",
+        "evidenceText": "\"지금 바꾸지 않으면 보장이 크게 줄어듭니다.\" (위협·부추김)",
+        "grounding_status": "MISSING"
+      },
+      {
+        "sentence": "이 상품은 보험료가 절대 오르지 않습니다.",
+        "violation_type": "UNGROUNDED_CLAIM",
+        "issue": "보험료 변동을 단정하는 근거 없는 주장이다. 약관은 갱신 시 보험료가 재산정될 수 있다고 정한다.",
+        "evidenceType": "KNOWLEDGE_DOCUMENT",
+        "evidenceRef": "data/knowledge/terms.md#T2-renewal-premium",
+        "evidenceText": "갱신 시 보험료는 갱신 시점의 나이·보장 내용·상품 조건 등을 반영하여 재산정될 수 있다. 따라서 갱신 전 보험료와 달라질 수 있다.",
+        "grounding_status": "MISSING"
+      },
+      {
+        "sentence": "세상에서 가장 좋은 보장입니다.",
+        "violation_type": "EXAGGERATION",
+        "issue": "객관적 근거가 없는 과장 광고 표현이다. 판매 시 유의사항(금지 표현) 및 상품설명서의 근거 기반 원칙을 위반한다.",
+        "evidenceType": "KNOWLEDGE_DOCUMENT",
+        "evidenceRef": "data/knowledge/sales-cautions.md#safety-forbidden",
+        "evidenceText": "\"세상에서 가장 좋은 보장입니다.\" (과장 광고)",
+        "grounding_status": "MISSING"
+      }
+    ]
+  },
+  "review_result": {
+    "decision": "REJECTED",
+    "reasons": [
+      "위협·부추김 표현(THREAT_PRESSURE) 1건",
+      "근거 없는 단정(UNGROUNDED_CLAIM) 1건",
+      "과장 광고(EXAGGERATION) 1건"
+    ]
+  },
+  "allowable_alternative": {
+    "text": "가입 중인 갱신형 특약의 갱신 예정일이 다가와, 갱신 조건을 미리 안내드리고자 연락드렸습니다. 갱신 시 보험료가 재산정될 수 있으니 갱신 안내 자료를 함께 확인해 주세요.",
+    "grounding_refs": [
+      "data/knowledge/renewal-faq.md#Q3",
+      "data/knowledge/terms.md#T2-renewal-premium",
+      "data/knowledge/product-guide.md#ts2001-renewal"
+    ]
+  }
+}

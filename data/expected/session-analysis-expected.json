@@ -1,0 +1,86 @@
+{
+  "demo_as_of_date": "2026-09-09",
+  "transcript_ref": "data/demo/consultation-transcript.txt",
+  "call_meta": {
+    "started_at": "2026-09-09T11:00:00",
+    "ended_at": "2026-09-09T11:02:00",
+    "duration_minutes": 2
+  },
+  "analysis": {
+    "outcome": {
+      "value": "상담_성공",
+      "evidence": {
+        "evidenceType": "TRANSCRIPT",
+        "evidenceRef": "data/demo/consultation-transcript.txt#spk:17",
+        "evidenceText": "[FC-001] 네, 감사합니다. 다음 주 목요일 오후에 다시 연락드리겠습니다."
+      }
+    },
+    "customer_needs": [
+      {
+        "need": "기존 계약 보장내용 점검",
+        "evidence": {
+          "evidenceType": "TRANSCRIPT",
+          "evidenceRef": "data/demo/consultation-transcript.txt#spk:6",
+          "evidenceText": "[CUST-001] 그런데 저는 제가 가입한 보험이 정확히 뭘 보장하는지 잘 모르고 있어요. 가입한 보험에서 입원하면 얼마나 보장되는지 정리해서 알려주실 수 있어요?"
+        }
+      },
+      {
+        "need": "갱신 조건 사전 확인",
+        "evidence": {
+          "evidenceType": "TRANSCRIPT",
+          "evidenceRef": "data/demo/consultation-transcript.txt#spk:10",
+          "evidenceText": "[CUST-001] 아, 그렇군요. 새로 가입할 생각은 아직 없어요. 다만 지금 가입한 것들이 제대로 보장되는지만 확인하고 싶어요."
+        }
+      }
+    ],
+    "customer_interests": [
+      {
+        "interest": "기존 계약(종신보험·갱신형 특약) 보장내용",
+        "evidence": {
+          "evidenceType": "TRANSCRIPT",
+          "evidenceRef": "data/demo/consultation-transcript.txt#spk:6",
+          "evidenceText": "[CUST-001] 그런데 저는 제가 가입한 보험이 정확히 뭘 보장하는지 잘 모르고 있어요. 가입한 보험에서 입원하면 얼마나 보장되는지 정리해서 알려주실 수 있어요?"
+        }
+      }
+    ],
+    "rejection_or_disinterest": [
+      {
+        "item": "추가가입_의향_낮음",
+        "evidence": {
+          "evidenceType": "TRANSCRIPT",
+          "evidenceRef": "data/demo/consultation-transcript.txt#spk:10",
+          "evidenceText": "[CUST-001] 아, 그렇군요. 새로 가입할 생각은 아직 없어요. 다만 지금 가입한 것들이 제대로 보장되는지만 확인하고 싶어요."
+        }
+      },
+      {
+        "item": "치아보험_무관심",
+        "evidence": {
+          "evidenceType": "TRANSCRIPT",
+          "evidenceRef": "data/demo/consultation-transcript.txt#spk:12",
+          "evidenceText": "[CUST-001] 혹시 다른 보험, 예를 들어 치아보험 같은 건 관심 없어요."
+        }
+      }
+    ],
+    "concerns": [
+      {
+        "concern": "갱신_보험료_부담",
+        "evidence": {
+          "evidenceType": "TRANSCRIPT",
+          "evidenceRef": "data/demo/consultation-transcript.txt#spk:8",
+          "evidenceText": "[CUST-001] 네, 감사합니다. 그런데 갱신되면 보험료가 오른다고 들었는데 걱정이 되네요."
+        }
+      }
+    ],
+    "followup_requested": {
+      "needed": true,
+      "preferred_datetime": "2026-09-17T14:00:00",
+      "evidence": {
+        "evidenceType": "TRANSCRIPT",
+        "evidenceRef": "data/demo/consultation-transcript.txt#spk:14",
+        "evidenceText": "[CUST-001] 그럼 다음 주 목요일 오후에 다시 연락 주시면, 그때 보장 내용을 자세히 설명받고 싶어요."
+      }
+    },
+    "ai_summary": "김동양 고객은 갱신형 특약 갱신(2026-10-11) 안내를 들은 후, 기존 계약(종신보험·갱신형 특약)의 보장내용 점검을 희망했다. 갱신 후 보험료 변동에 대한 걱정을 표현했으며, 추가 가입 의향은 낮고 치아보험에는 관심이 없다. 다음 주 목요일(2026-09-17) 오후 재상담을 약속했다."
+  },
+  "evidence_policy": "모든 분석 필드는 TRANSCRIPT evidence 포함"
+}

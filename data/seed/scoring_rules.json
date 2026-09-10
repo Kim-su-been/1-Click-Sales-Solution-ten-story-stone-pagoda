@@ -1,0 +1,80 @@
+{
+  "demo_as_of_date": "2026-09-09",
+  "rule_version": "1.0",
+  "eligibility": [
+    {
+      "rule_id": "E1",
+      "name_kr": "연락 동의 여부",
+      "condition": "consent_channels 가 비어 있으면 INELIGIBLE (CONTACT_CONSENT_NONE)",
+      "exclusion_reason": "CONTACT_CONSENT_NONE"
+    },
+    {
+      "rule_id": "E2",
+      "name_kr": "진행 중 민원 여부",
+      "condition": "active_complaint == true 이면 INELIGIBLE (ACTIVE_COMPLAINT)",
+      "exclusion_reason": "ACTIVE_COMPLAINT"
+    }
+  ],
+  "score_rules": [
+    {
+      "rule_id": "R1a",
+      "name_kr": "FC 변경 후 3개월 이내",
+      "condition": "fc_changed_at 기준 경과 개월 수 <= 3",
+      "points": 25,
+      "category": "고객관리필요성"
+    },
+    {
+      "rule_id": "R1b",
+      "name_kr": "FC 변경 후 3개월 초과 ~ 12개월 이내",
+      "condition": "3 < fc_changed_at 기준 경과 개월 수 <= 12",
+      "points": 20,
+      "category": "고객관리필요성",
+      "exclusive_with": "R1a"
+    },
+    {
+      "rule_id": "R2",
+      "name_kr": "최근 접촉 후 12개월 이상 경과",
+      "condition": "last_contacted_at 기준 경과 개월 수 >= 12",
+      "points": 30,
+      "category": "계약유지위험"
+    },
+    {
+      "rule_id": "R3a",
+      "name_kr": "특약 갱신일까지 45일 이내",
+      "condition": "renewal_date - demo_as_of_date 의 days_until <= 45",
+      "points": 25,
+      "category": "시점적절성"
+    },
+    {
+      "rule_id": "R3b",
+      "name_kr": "특약 갱신일까지 46~60일",
+      "condition": "46 <= days_until <= 60",
+      "points": 20,
+      "category": "시점적절성",
+      "exclusive_with": "R3a"
+    },
+    {
+      "rule_id": "R4",
+      "name_kr": "최근 6개월 내 상담 이력 없음",
+      "condition": "last_consultation_at 가 null 이거나 기준일 기준 6개월+1일 이상 경과",
+      "points": 15,
+      "category": "고객관리필요성"
+    },
+    {
+      "rule_id": "R5",
+      "name_kr": "보험료 연체 이력 1회 이상",
+      "condition": "해당 고객의 계약 중 premium_status == OVERDUE 인 계약이 1건 이상",
+      "points": 3,
+      "category": "계약유지위험"
+    }
+  ],
+  "date_math": {
+    "months_elapsed": "경과 개월 수 = (기준연도-시작연도)*12 + (기준월-시작월). 일자(day)는 고려하지 않는다. 예: 2025-10-09 → 2026-09-09 = 11개월",
+    "days_until": "D-day = (대상일 - DEMO_AS_OF_DATE).days. 예: 2026-10-11 - 2026-09-09 = 32일"
+  },
+  "notes": [
+    "보험료 금액(월 보험료)은 Rescue Score 계산에 전혀 사용하지 않는다.",
+    "점수 합산 후 최고 점수 1명을 daily_pick 으로 선정한다.",
+    "Ineligible 고객은 동일 규칙으로 계산한 potential_score(참고 점수)만 표시하고 rescue_score 는 null 로 둔다."
+  ]
+}
