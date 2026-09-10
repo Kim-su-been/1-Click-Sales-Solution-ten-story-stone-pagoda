@@ -12,7 +12,7 @@ from ui.common import nfc, page_header, section_header
 
 
 def render(loader: DataLoader) -> None:
-    page_header("☎️", "상담 진행", "STEP 2 / 3 · Mock 통화")
+    page_header("상담 진행", "STEP 2 / 3 · Mock 통화")
 
     # Runtime Customer Selection 결과로 1-Pick 고객 식별
     from src.agents.orchestrator import run_demo_pipeline
@@ -27,7 +27,7 @@ def render(loader: DataLoader) -> None:
     )
 
     # 고객 정보
-    section_header("상담 고객", "👤", first=True)
+    section_header("상담 고객", first=True)
     st.markdown(
         f"""
         <div class="pick-card">
@@ -42,8 +42,8 @@ def render(loader: DataLoader) -> None:
     )
 
     # Mock 상담 상태
-    section_header("Mock 상담 진행 중", "🎙️")
-    st.warning("⚠️ 이 화면의 전화·녹취·STT는 모두 **Mock** 입니다. 실제 전화 발신·음성 인식은 없습니다.")
+    section_header("Mock 상담 진행 중")
+    st.warning("이 화면의 전화·녹취·STT는 모두 **Mock** 입니다. 실제 전화 발신·음성 인식은 없습니다.")
 
     with st.container(border=True):
         col_status, col_stt = st.columns(2)
@@ -68,7 +68,7 @@ def render(loader: DataLoader) -> None:
             st.caption('"전화하기"로 진입했습니다. (데모 상 통화 연결 상태로 가정)')
 
     # Transcript 불러오기 (Mock STT)
-    section_header("준비된 상담 Transcript (Mock STT)", "📝")
+    section_header("준비된 상담 Transcript (Mock STT)")
     stt_res = demo_state.get_tool_results().get("STT_COMPLETED")
     if st.button("Mock STT 실행", use_container_width=True):
         session_id = demo_state.get_session_id()
