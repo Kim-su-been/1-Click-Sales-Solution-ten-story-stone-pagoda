@@ -14,6 +14,31 @@ def nfc(value: str) -> str:
     return unicodedata.normalize("NFC", value)
 
 
+# 내부 상태 코드 → 화면 표시용 plain-language 라벨. 값 자체(테스트/Expected 비교 대상)는
+# 건드리지 않고 화면에 보여줄 때만 사람이 읽기 쉬운 말로 바꾼다.
+STATUS_LABELS: dict[str, str] = {
+    "DRAFT": "초안",
+    "FC_REVIEW": "FC 검토 대기",
+    "SAVED": "저장 완료",
+    "SUGGESTED": "제안됨",
+    "PENDING_FC_CONFIRM": "FC 확인 대기",
+    "COMPLIANT": "규정 준수 확인",
+    "REJECTED": "반려",
+}
+
+
+def humanize(text: str) -> str:
+    """내부 코드/태그성 텍스트를 화면에 읽기 쉽게 변환 (값 자체는 변경하지 않음).
+
+    - 알려진 상태 코드는 한국어 라벨로 치환
+    - '_' 로 이어진 태그성 텍스트는 공백으로 풀어서 자연스럽게 표시
+    """
+    t = nfc(str(text))
+    if t in STATUS_LABELS:
+        return STATUS_LABELS[t]
+    return t.replace("_", " ")
+
+
 def inject_css() -> None:
     """관리자 화면 톤의 CSS — 단일 accent·넓은 여백·부드러운 카드 elevation."""
     import streamlit as st
@@ -40,10 +65,14 @@ def inject_css() -> None:
             --shadow-card: 0 1px 2px rgba(15,23,42,0.04), 0 6px 20px rgba(15,23,42,0.06);
         }
 
-        [data-testid="stAppViewContainer"] .block-container { padding-top: 4.5rem; max-width: 900px; }
+        [data-testid="stAppViewContainer"] .block-container { padding-top: 4rem; max-width: 900px; }
         html, body, [class*="css"] { color: var(--ink); }
 
         h1 { font-size: 1.3rem !important; }
+
+        /* --- 상단 로고 배너 --- */
+        .logo-banner { padding: 2px 0 16px 0; margin-bottom: 12px; border-bottom: 1px solid var(--line); }
+        .logo-banner img { height: 30px; display: block; }
 
         /* --- 페이지 헤더 --- */
         .page-eyebrow { font-size: 0.78rem; font-weight: 600; color: var(--accent);
@@ -124,6 +153,23 @@ def inject_css() -> None:
         div[data-testid="stCodeBlock"] { border-radius: var(--radius-control); }
         </style>
         """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_logo_banner() -> None:
+    """상단 로고 배너 — 사내 시스템 화면임을 나타내는 최소한의 브랜드 마크만 표시."""
+    import base64
+    from pathlib import Path
+
+    import streamlit as st
+
+    logo_path = Path(__file__).parent / "assets" / "dongyang_logo.png"
+    if not logo_path.exists():
+        return
+    b64 = base64.b64encode(logo_path.read_bytes()).decode("ascii")
+    st.markdown(
+        f'<div class="logo-banner"><img src="data:image/png;base64,{b64}" alt="동양생명" /></div>',
         unsafe_allow_html=True,
     )
 

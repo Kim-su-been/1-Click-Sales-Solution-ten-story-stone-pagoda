@@ -17,6 +17,7 @@ from src.runtime_models import days_until, months_elapsed
 @dataclass
 class ScoreBreakdownItem:
     rule_id: str
+    name_kr: str
     points: int
     evidence_text: str
 
@@ -27,11 +28,21 @@ class ScoreResult:
     items: list[ScoreBreakdownItem]
 
 
-def _rule_condition(points_rules: list[dict[str, Any]], rule_id: str) -> int | None:
+def _rule_lookup(points_rules: list[dict[str, Any]], rule_id: str) -> dict[str, Any] | None:
     for r in points_rules:
         if r.get("rule_id") == rule_id:
-            return int(r.get("points", 0))
+            return r
     return None
+
+
+def _rule_condition(points_rules: list[dict[str, Any]], rule_id: str) -> int | None:
+    rule = _rule_lookup(points_rules, rule_id)
+    return int(rule.get("points", 0)) if rule else None
+
+
+def _rule_name_kr(points_rules: list[dict[str, Any]], rule_id: str) -> str:
+    rule = _rule_lookup(points_rules, rule_id)
+    return rule.get("name_kr", rule_id) if rule else rule_id
 
 
 def compute_score(
@@ -51,7 +62,7 @@ def compute_score(
             pts = _rule_condition(score_rules, "R1a")
             if pts:
                 items.append(ScoreBreakdownItem(
-                    "R1a", pts,
+                    "R1a", _rule_name_kr(score_rules, "R1a"), pts,
                     f"fc_changed_at={customer.fc_changed_at} 기준 {fc_months}개월 경과(3개월 이내)",
                 ))
                 total += pts
@@ -59,7 +70,7 @@ def compute_score(
             pts = _rule_condition(score_rules, "R1b")
             if pts:
                 items.append(ScoreBreakdownItem(
-                    "R1b", pts,
+                    "R1b", _rule_name_kr(score_rules, "R1b"), pts,
                     f"fc_changed_at={customer.fc_changed_at} 기준 {fc_months}개월 경과(3개월 초과~12개월 이내)",
                 ))
                 total += pts
@@ -70,7 +81,7 @@ def compute_score(
         pts = _rule_condition(score_rules, "R2")
         if pts:
             items.append(ScoreBreakdownItem(
-                "R2", pts,
+                "R2", _rule_name_kr(score_rules, "R2"), pts,
                 f"last_contacted_at={customer.last_contacted_at} 기준 {contact_months}개월 경과(12개월 이상)",
             ))
             total += pts
@@ -83,7 +94,7 @@ def compute_score(
             pts = _rule_condition(score_rules, "R3a")
             if pts:
                 items.append(ScoreBreakdownItem(
-                    "R3a", pts,
+                    "R3a", _rule_name_kr(score_rules, "R3a"), pts,
                     f"renewal_date={min(renewal_dates, key=lambda d: days_until(as_of, d))}, D-{d_min}(45일 이내)",
                 ))
                 total += pts
@@ -91,7 +102,7 @@ def compute_score(
             pts = _rule_condition(score_rules, "R3b")
             if pts:
                 items.append(ScoreBreakdownItem(
-                    "R3b", pts,
+                    "R3b", _rule_name_kr(score_rules, "R3b"), pts,
                     f"renewal_date={min(renewal_dates, key=lambda d: days_until(as_of, d))}, D-{d_min}(46~60일)",
                 ))
                 total += pts
@@ -105,7 +116,7 @@ def compute_score(
         if pts:
             lc = customer.last_consultation_at if customer.last_consultation_at else "null"
             items.append(ScoreBreakdownItem(
-                "R4", pts,
+                "R4", _rule_name_kr(score_rules, "R4"), pts,
                 f"last_consultation_at={lc}(최근 6개월 내 상담 이력 없음)",
             ))
             total += pts
@@ -115,7 +126,7 @@ def compute_score(
         pts = _rule_condition(score_rules, "R5")
         if pts:
             items.append(ScoreBreakdownItem(
-                "R5", pts,
+                "R5", _rule_name_kr(score_rules, "R5"), pts,
                 "해당 고객 계약 중 premium_status==OVERDUE 인 계약 1건 이상",
             ))
             total += pts

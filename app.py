@@ -11,12 +11,13 @@ import streamlit as st
 import src.config as cfg
 import src.demo_state as demo_state
 from src.data_loader import DataLoadingError, get_loader
-from ui.common import inject_css, render_stepper
+from ui.common import inject_css, render_logo_banner, render_stepper
 
 
 def main() -> None:
     st.set_page_config(page_title=cfg.APP_TITLE, layout="wide")
     inject_css()
+    render_logo_banner()
 
     try:
         loader = get_loader()

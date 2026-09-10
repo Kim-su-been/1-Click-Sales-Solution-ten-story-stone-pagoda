@@ -61,34 +61,44 @@ def render(loader: DataLoader) -> None:
         unsafe_allow_html=True,
     )
 
-    # --- 점수 세부 항목 ---
+    # --- 점수 세부 항목: 쉬운 말 우선 표시, 상세 산출식은 보조 텍스트로 ---
     section_header("점수 세부 항목")
     with st.container(border=True):
         for item in pick_score.items:
             if item.points > 0:
-                st.markdown(f"- **{nfc(item.rule_id)}** · +{item.points}점 — {nfc(item.evidence_text)}")
+                st.markdown(
+                    f'<div style="margin-bottom:12px;">'
+                    f'<div style="font-size:0.95rem;">{nfc(item.name_kr)} · '
+                    f'<span style="color:var(--accent);font-weight:700;">+{item.points}점</span></div>'
+                    f'<div style="font-size:0.78rem;color:var(--ink-tertiary);margin-top:2px;">{nfc(item.evidence_text)}</div>'
+                    f"</div>",
+                    unsafe_allow_html=True,
+                )
         st.caption(
-            f"합계 **{pick_score.total}점**. Ineligible 고객은 후보에서 제외되며 "
-            "Eligible 후보 중 최고점 고객이 1-Pick으로 선정됩니다."
+            f"합계 {pick_score.total}점 — 연락 가능한 고객 중 이 점수가 가장 높아 오늘의 1-Pick으로 선정되었습니다."
         )
 
-    # --- 고객 선정 근거 ---
+    # --- 고객 선정 근거: 코드 나열 대신 문장으로 설명 ---
     section_header("고객 선정 근거")
+    from src.eligibility import EXCLUSION_REASON_LABELS
+
     ineligible = [(cid, res.exclusion_reason) for cid, res in selection.eligible.items() if not res.eligible]
     st.caption(
-        "Eligibility → Rescue Score → 최고점 1명 선정 (Customer Selection Agent). "
-        f"Ineligible {len(ineligible)}명: "
-        + ", ".join(f"{cid}({reason})" for cid, reason in ineligible)
-        if ineligible
-        else "Eligibility 통과 고객 없음"
+        f"전체 후보 {len(customers)}명 중 연락 가능 여부를 먼저 확인한 뒤, "
+        "그 안에서 점수가 가장 높은 고객 1명을 오늘의 1-Pick으로 선정했습니다."
     )
+    if ineligible:
+        excluded_text = ", ".join(
+            f"{cid} ({EXCLUSION_REASON_LABELS.get(reason, reason)})" for cid, reason in ineligible
+        )
+        st.caption(f"이번에 제외된 고객 {len(ineligible)}명: {excluded_text}")
 
     # --- Contact Reason ---
     reason = gs.contact_reason
-    section_header("추천 Contact Reason")
+    section_header("추천 연락 사유")
     st.markdown(
-        f'<span class="badge badge-info">{nfc(reason["code"])}</span> '
-        f'<b>{nfc(reason["text"])}</b>',
+        f'<b>{nfc(reason["text"])}</b> '
+        f'<span class="badge badge-info">{nfc(reason["code"])}</span>',
         unsafe_allow_html=True,
     )
     st.caption(nfc(reason.get("pick_basis", "")))

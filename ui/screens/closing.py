@@ -9,7 +9,7 @@ import streamlit as st
 import src.config as cfg
 from src import demo_state
 from src.data_loader import DataLoader
-from ui.common import nfc, page_header, render_evidence, section_header
+from ui.common import humanize, nfc, page_header, render_evidence, section_header
 
 
 def _transcript_snippet(loader: DataLoader, evidenceRef: str) -> str:
@@ -51,24 +51,24 @@ def render(loader: DataLoader) -> None:
     section_header("고객의 관심사항과 반응")
     st.markdown("**기존 보장내용 확인 요청**")
     for need in analysis["customer_needs"]:
-        st.markdown(f"- {nfc(need['need'])}")
+        st.markdown(f"- {humanize(need['need'])}")
         render_evidence(need["evidence"], label="근거", key_prefix=f"need_{need['need'][:8]}")
 
     st.markdown("**보험료 및 갱신 걱정**")
     for c in analysis["concerns"]:
-        st.markdown(f"- {nfc(c['concern'])}")
+        st.markdown(f"- {humanize(c['concern'])}")
         render_evidence(c["evidence"], label="근거", key_prefix=f"concern_{c['concern'][:8]}")
 
     st.markdown("**추가 가입 의향 / 무관심**")
     for item in analysis["rejection_or_disinterest"]:
-        st.markdown(f"- {nfc(item['item'])}")
+        st.markdown(f"- {humanize(item['item'])}")
         render_evidence(item["evidence"], label="근거", key_prefix=f"rej_{item['item'][:8]}")
 
     # 상담 결과
     section_header("고객 반응과 상담 결과")
     outcome = analysis["outcome"]
     st.markdown(
-        f'<span class="badge badge-ok">{nfc(outcome["value"])}</span> '
+        f'<span class="badge badge-ok">{humanize(outcome["value"])}</span> '
         f'후속 상담 필요: <b>{"예" if analysis["followup_requested"]["needed"] else "아니오"}</b> · '
         f'희망 일시 <b>{analysis["followup_requested"].get("preferred_datetime", "")}</b>',
         unsafe_allow_html=True,
@@ -81,9 +81,12 @@ def render(loader: DataLoader) -> None:
     phase = crm.get("phase", "FC_REVIEW")
     auto = crm.get("auto_finalized", False)
     st.markdown(
-        f'<span class="badge badge-warn">status: <b>{status}</b> · phase: <b>{nfc(phase)}</b>'
-        f' · auto_finalized: {"true" if auto else "false"}</span>',
+        f'<span class="badge badge-warn">{humanize(status)} · {humanize(phase)}</span>',
         unsafe_allow_html=True,
+    )
+    st.caption(
+        f"자동 확정 여부: {'예' if auto else '아니오 (FC 확인 필요)'} · "
+        f"내부 상태 코드: status={status}, phase={phase}"
     )
     st.caption(nfc(crm.get("note", "")))
 
@@ -91,11 +94,11 @@ def render(loader: DataLoader) -> None:
     st.markdown(
         f"""
         - **상담 유형**: {nfc(rec.get('consultation_type',''))} · **일시**: {rec.get('consultation_datetime')}
-        - **결과**: {nfc(rec.get('outcome',''))}
-        - **고객 니즈**: {', '.join(nfc(x) for x in rec.get('customer_needs', []))}
+        - **결과**: {humanize(rec.get('outcome',''))}
+        - **고객 니즈**: {', '.join(humanize(x) for x in rec.get('customer_needs', []))}
         - **관심사**: {', '.join(nfc(x) for x in rec.get('customer_interests', []))}
-        - **걱정**: {', '.join(nfc(x) for x in rec.get('concerns', []))}
-        - **무관심**: {', '.join(nfc(x) for x in rec.get('disinterest_items', []))}
+        - **걱정**: {', '.join(humanize(x) for x in rec.get('concerns', []))}
+        - **무관심**: {', '.join(humanize(x) for x in rec.get('disinterest_items', []))}
         - **후속 필요**: {'예' if rec.get('followup_needed') else '아니오'} ·
           **희망 일시**: {rec.get('preferred_datetime')}
         """
@@ -111,7 +114,7 @@ def render(loader: DataLoader) -> None:
     if demo_state.is_crm_confirmed():
         st.markdown(
             '<span class="badge badge-ok">FC 확인 완료</span> '
-            '<span class="badge badge-info">CRM DRAFT / FC_REVIEW 유지</span>',
+            '<span class="badge badge-info">CRM 초안 · FC 검토 상태 유지</span>',
             unsafe_allow_html=True,
         )
         # Mock 저장 결과 표시
@@ -164,16 +167,16 @@ def render(loader: DataLoader) -> None:
         st.caption("버튼 클릭 시 Mock CRM 저장 → Mock Calendar 등록 → Feedback 저장이 순서대로 실행됩니다.")
 
     # Next Action
-    section_header("Next Action")
+    section_header("다음 할 일 (Next Action)")
     for act in next_actions:
         st.markdown(
-            f"- **[{nfc(act['action_type'])}]** {nfc(act['title'])} — "
-            f"due: {act.get('due_datetime')} · 상태: {nfc(act.get('status',''))}"
+            f"- **{nfc(act['title'])}** — "
+            f"예정일 {act.get('due_datetime')} · 상태: {humanize(act.get('status',''))}"
         )
-    st.markdown("**캘린더 후보**")
+    st.markdown("**재상담 일정 후보**")
     st.markdown(
         f"- {nfc(calendar.get('title',''))} — {calendar.get('due_datetime')} "
-        f"({calendar.get('duration_minutes')}분) · 상태: {nfc(calendar.get('status',''))}"
+        f"({calendar.get('duration_minutes')}분) · 상태: {humanize(calendar.get('status',''))}"
     )
     render_evidence(calendar.get("evidence"), label="캘린더 근거", key_prefix="cal")
 
