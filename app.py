@@ -11,7 +11,7 @@ import streamlit as st
 import src.config as cfg
 import src.demo_state as demo_state
 from src.data_loader import DataLoadingError, get_loader
-from ui.common import inject_css
+from ui.common import inject_css, render_stepper
 
 
 def main() -> None:
@@ -19,7 +19,11 @@ def main() -> None:
     inject_css()
 
     # 헤더
-    st.markdown("## 🛟 1-Pick Rescue Agent — Demo (Walking Skeleton)")
+    st.markdown(
+        '<div style="font-size:1.05rem;font-weight:700;color:#12233f;margin-bottom:4px;">'
+        "🛟 1-Pick Rescue Agent — Demo (Walking Skeleton)</div>",
+        unsafe_allow_html=True,
+    )
 
     try:
         loader = get_loader()
@@ -30,15 +34,13 @@ def main() -> None:
     # 좌측 진행 단계 표시
     screen = demo_state.get_screen()
     steps = {
-        cfg.SCREEN_DAILY_PICK: "1. 오늘의 1-Pick",
-        cfg.SCREEN_CONSULTATION: "2. 상담 진행",
-        cfg.SCREEN_CLOSING: "3. 상담 완료",
+        cfg.SCREEN_DAILY_PICK: "오늘의 1-Pick",
+        cfg.SCREEN_CONSULTATION: "상담 진행",
+        cfg.SCREEN_CLOSING: "상담 완료",
     }
     with st.sidebar:
         st.markdown("**진행 단계**")
-        for key, label in steps.items():
-            mark = "✅" if key == screen else "·"
-            st.markdown(f"{mark} {label}")
+        render_stepper(steps, screen)
         st.markdown("---")
         st.caption(f"데모 기준일: **{cfg.DEMO_AS_OF_DATE}**")
         st.caption("모든 데이터는 가상 Mock 데이터입니다.")

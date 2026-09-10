@@ -8,7 +8,7 @@ import streamlit as st
 import src.config as cfg
 from src import demo_state
 from src.data_loader import DataLoader
-from ui.common import nfc, render_evidence
+from ui.common import nfc, page_header, render_evidence, section_header
 
 
 def _format_months(m: int | None) -> str:
@@ -16,7 +16,7 @@ def _format_months(m: int | None) -> str:
 
 
 def render(loader: DataLoader) -> None:
-    st.title("오늘의 1-Pick")
+    page_header("🔔", "오늘의 1-Pick", "STEP 1 / 3 · 고객 선정")
 
     # 가상 데이터 고지
     st.markdown(
@@ -47,7 +47,7 @@ def render(loader: DataLoader) -> None:
     )
 
     # --- 1-Pick 카드 ---
-    st.markdown("### 🔔 오늘의 1-Pick")
+    section_header("오늘의 1-Pick 고객", "🎯", first=True)
     st.markdown(
         f"""
         <div class="pick-card">
@@ -62,17 +62,18 @@ def render(loader: DataLoader) -> None:
     )
 
     # --- 점수 세부 항목 ---
-    st.markdown("### 점수 세부 항목")
-    for item in pick_score.items:
-        if item.points > 0:
-            st.markdown(f"- **{nfc(item.rule_id)}** · +{item.points}점 — {nfc(item.evidence_text)}")
-    st.caption(
-        f"합계 **{pick_score.total}점**. Ineligible 고객은 후보에서 제외되며 "
-        "Eligible 후보 중 최고점 고객이 1-Pick으로 선정됩니다."
-    )
+    section_header("점수 세부 항목", "🧮")
+    with st.container(border=True):
+        for item in pick_score.items:
+            if item.points > 0:
+                st.markdown(f"- **{nfc(item.rule_id)}** · +{item.points}점 — {nfc(item.evidence_text)}")
+        st.caption(
+            f"합계 **{pick_score.total}점**. Ineligible 고객은 후보에서 제외되며 "
+            "Eligible 후보 중 최고점 고객이 1-Pick으로 선정됩니다."
+        )
 
     # --- 고객 선정 근거 ---
-    st.markdown("### 고객 선정 근거")
+    section_header("고객 선정 근거", "📋")
     ineligible = [(cid, res.exclusion_reason) for cid, res in selection.eligible.items() if not res.eligible]
     st.caption(
         "Eligibility → Rescue Score → 최고점 1명 선정 (Customer Selection Agent). "
@@ -84,7 +85,7 @@ def render(loader: DataLoader) -> None:
 
     # --- Contact Reason ---
     reason = gs.contact_reason
-    st.markdown("### 추천 Contact Reason")
+    section_header("추천 Contact Reason", "💡")
     st.markdown(
         f'<span class="badge badge-info">{nfc(reason["code"])}</span> '
         f'<b>{nfc(reason["text"])}</b>',
@@ -94,18 +95,22 @@ def render(loader: DataLoader) -> None:
 
     # --- 전화 스크립트 (Compliance 통과) ---
     scripts = gs.scripts
-    st.markdown("### 전화 스크립트 (Compliance 검증 통과)")
-    st.info("Compliance: 금지 표현 0건 · 모든 문장이 Knowledge 근거에 연결됨 (COMPLIANT)")
-
-    call = scripts["CALL_FIRST_OPENING"]
-    st.markdown(f"📞 **{nfc(call['text'])}**")
-    if st.button("Knowledge 근거 보기", key="kd_open"):
-        for se in call["sentence_evidence"]:
-            st.markdown(f"- `{nfc(se['sentence'])}`")
-            render_evidence(se, label="문장 근거", key_prefix=f"cs_{se['sentence'][:10]}")
+    section_header("전화 스크립트", "📞")
+    with st.container(border=True):
+        st.markdown(
+            '<span class="badge badge-ok">COMPLIANT</span> '
+            "금지 표현 0건 · 모든 문장이 Knowledge 근거에 연결됨",
+            unsafe_allow_html=True,
+        )
+        call = scripts["CALL_FIRST_OPENING"]
+        st.markdown(f"**{nfc(call['text'])}**")
+        if st.button("Knowledge 근거 보기", key="kd_open"):
+            for se in call["sentence_evidence"]:
+                st.markdown(f"- `{nfc(se['sentence'])}`")
+                render_evidence(se, label="문장 근거", key_prefix=f"cs_{se['sentence'][:10]}")
 
     # --- 채널 버튼 ---
-    st.markdown("### 연락 채널 (Mock)")
+    section_header("연락 채널 (Mock)", "📨")
     c1, c2, c3 = st.columns(3)
     call_script = call["text"]
     sms_script = scripts["SMS"]["text"]
@@ -114,7 +119,7 @@ def render(loader: DataLoader) -> None:
 
     from src.agents.orchestrator import start_mock_call, send_mock_sms, send_mock_kakao
 
-    if c1.button("📞 전화하기", use_container_width=True):
+    if c1.button("📞 전화하기", use_container_width=True, type="primary"):
         res = start_mock_call(session_id, cust_id, call_script)
         demo_state.set_tool_result("CALL_STARTED", res.to_dict())
         if res.success:
@@ -173,24 +178,27 @@ def render(loader: DataLoader) -> None:
     st.markdown("---")
     st.caption(f"기준일: {cfg.DEMO_AS_OF_DATE} 기준 · 모든 값은 Demo Mock 데이터입니다.")
 
-    # --- Stage 2 Runtime 패널 ---
-    st.markdown("### 🧭 Stage 2 Runtime (Orchestrator)")
-    st.caption("Runtime Agent 파이프라인: POOL_SCAN → SCORING → PICK_READY → GROUNDING → SAFETY_CHECK → … → DONE")
-    try:
-        from src.agents.orchestrator import run_demo_pipeline
+    # --- Stage 2 Runtime 패널: 판매 흐름과 분리된 검증용 패널 ---
+    with st.expander("🧭 기능 검증 정보 — Stage 2 Runtime (Orchestrator)"):
+        st.caption(
+            "Runtime Agent 파이프라인 실행 로그입니다. 위 화면 구성과는 별개로, "
+            "내부 동작이 정상인지 확인하려는 개발/QA 목적으로 제공됩니다."
+        )
+        st.caption("POOL_SCAN → SCORING → PICK_READY → GROUNDING → SAFETY_CHECK → … → DONE")
+        try:
+            from src.agents.orchestrator import run_demo_pipeline
 
-        result = run_demo_pipeline()
-        st.markdown(f"**Workflow 상태:** `{result.output.workflow_state}`")
-        ok = st.empty()
-        if result.output.errors:
-            ok.error(" → ".join(e.reason for e in result.output.errors))
-        else:
-            ok.success("전체 사이클 정상 완료 (DONE) · 오류 없음")
-        with st.expander("단계별 Evidence (StepResult)"):
-            for s in result.steps:
-                st.markdown(f"- **`{s.step_name}`** → `{s.state}` — {nfc(s.summary)}")
-    except Exception as exc:  # noqa: BLE001
-        st.warning(f"Stage 2 런타임을 실행하지 못했습니다: {exc}")
+            result = run_demo_pipeline()
+            st.markdown(f"**Workflow 상태:** `{result.output.workflow_state}`")
+            if result.output.errors:
+                st.error(" → ".join(e.reason for e in result.output.errors))
+            else:
+                st.success("전체 사이클 정상 완료 (DONE) · 오류 없음")
+            with st.expander("단계별 Evidence (StepResult)"):
+                for s in result.steps:
+                    st.markdown(f"- **`{s.step_name}`** → `{s.state}` — {nfc(s.summary)}")
+        except Exception as exc:  # noqa: BLE001
+            st.warning(f"Stage 2 런타임을 실행하지 못했습니다: {exc}")
 
 
 def _renewal_date(loader: DataLoader, cust_id: str) -> str | None:

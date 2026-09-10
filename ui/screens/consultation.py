@@ -8,11 +8,11 @@ import streamlit as st
 import src.config as cfg
 from src import demo_state
 from src.data_loader import DataLoader
-from ui.common import nfc
+from ui.common import nfc, page_header, section_header
 
 
 def render(loader: DataLoader) -> None:
-    st.title("상담 진행")
+    page_header("☎️", "상담 진행", "STEP 2 / 3 · Mock 통화")
 
     # Runtime Customer Selection 결과로 1-Pick 고객 식별
     from src.agents.orchestrator import run_demo_pipeline
@@ -27,7 +27,7 @@ def render(loader: DataLoader) -> None:
     )
 
     # 고객 정보
-    st.markdown("### 상담 고객")
+    section_header("상담 고객", "👤", first=True)
     st.markdown(
         f"""
         <div class="pick-card">
@@ -42,32 +42,33 @@ def render(loader: DataLoader) -> None:
     )
 
     # Mock 상담 상태
-    st.markdown("### Mock 상담 진행 중")
+    section_header("Mock 상담 진행 중", "🎙️")
     st.warning("⚠️ 이 화면의 전화·녹취·STT는 모두 **Mock** 입니다. 실제 전화 발신·음성 인식은 없습니다.")
 
-    col_status, col_stt = st.columns(2)
-    with col_status:
-        active = demo_state.is_call_active()
-        st.markdown(
-            '<span class="badge badge-warn">통화 연결됨 (Mock)</span>'
-            if active else
-            '<span class="badge badge-info">통화 대기 (Mock)</span>',
-            unsafe_allow_html=True,
-        )
-    with col_stt:
-        loaded = demo_state.is_transcript_loaded()
-        st.markdown(
-            '<span class="badge badge-ok">STT 완료 (Mock)</span>'
-            if loaded else
-            '<span class="badge badge-warn">STT 대기 (Mock)</span>',
-            unsafe_allow_html=True,
-        )
+    with st.container(border=True):
+        col_status, col_stt = st.columns(2)
+        with col_status:
+            active = demo_state.is_call_active()
+            st.markdown(
+                '<span class="badge badge-warn">통화 연결됨 (Mock)</span>'
+                if active else
+                '<span class="badge badge-info">통화 대기 (Mock)</span>',
+                unsafe_allow_html=True,
+            )
+        with col_stt:
+            loaded = demo_state.is_transcript_loaded()
+            st.markdown(
+                '<span class="badge badge-ok">STT 완료 (Mock)</span>'
+                if loaded else
+                '<span class="badge badge-warn">STT 대기 (Mock)</span>',
+                unsafe_allow_html=True,
+            )
 
-    if not active:
-        st.caption('"전화하기"로 진입했습니다. (데모 상 통화 연결 상태로 가정)')
+        if not active:
+            st.caption('"전화하기"로 진입했습니다. (데모 상 통화 연결 상태로 가정)')
 
     # Transcript 불러오기 (Mock STT)
-    st.markdown("### 준비된 상담 Transcript (Mock STT)")
+    section_header("준비된 상담 Transcript (Mock STT)", "📝")
     stt_res = demo_state.get_tool_results().get("STT_COMPLETED")
     if st.button("Mock STT 실행", use_container_width=True):
         session_id = demo_state.get_session_id()
