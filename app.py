@@ -11,15 +11,12 @@ import streamlit as st
 import src.config as cfg
 import src.demo_state as demo_state
 from src.data_loader import DataLoadingError, get_loader
-from ui.common import app_topbar, inject_css, render_stepper
+from ui.common import inject_css, render_stepper
 
 
 def main() -> None:
     st.set_page_config(page_title=cfg.APP_TITLE, layout="wide")
     inject_css()
-
-    # 상단 시스템 바
-    app_topbar("영업지원시스템", cfg.APP_TITLE)
 
     try:
         loader = get_loader()
