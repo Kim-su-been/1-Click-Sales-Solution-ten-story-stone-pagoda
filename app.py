@@ -11,19 +11,15 @@ import streamlit as st
 import src.config as cfg
 import src.demo_state as demo_state
 from src.data_loader import DataLoadingError, get_loader
-from ui.common import inject_css, render_stepper
+from ui.common import app_topbar, inject_css, render_stepper
 
 
 def main() -> None:
-    st.set_page_config(page_title=cfg.APP_TITLE, page_icon="🛟", layout="wide")
+    st.set_page_config(page_title=cfg.APP_TITLE, layout="wide")
     inject_css()
 
-    # 헤더
-    st.markdown(
-        '<div style="font-size:1.05rem;font-weight:700;color:#12233f;margin-bottom:4px;">'
-        "🛟 1-Pick Rescue Agent — Demo (Walking Skeleton)</div>",
-        unsafe_allow_html=True,
-    )
+    # 상단 시스템 바
+    app_topbar("영업지원시스템", cfg.APP_TITLE)
 
     try:
         loader = get_loader()

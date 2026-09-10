@@ -22,7 +22,7 @@ def _transcript_snippet(loader: DataLoader, evidenceRef: str) -> str:
 
 
 def render(loader: DataLoader) -> None:
-    page_header("✅", "상담 완료", "STEP 3 / 3 · 분석 및 마무리")
+    page_header("상담 완료", "STEP 3 / 3 · 분석 및 마무리")
 
     # Runtime Conversation Analysis 결과로 교체 (Expected 미사용)
     from src.agents.orchestrator import run_demo_pipeline
@@ -40,7 +40,7 @@ def render(loader: DataLoader) -> None:
     )
 
     # 상담 요약
-    section_header("상담 요약", "🗒️", first=True)
+    section_header("상담 요약", first=True)
     with st.container(border=True):
         st.write(nfc(analysis.get("ai_summary", "")))
         st.caption(
@@ -48,7 +48,7 @@ def render(loader: DataLoader) -> None:
         )
 
     # 고객 반응·관심·걱정·거절
-    section_header("고객의 관심사항과 반응", "💬")
+    section_header("고객의 관심사항과 반응")
     st.markdown("**기존 보장내용 확인 요청**")
     for need in analysis["customer_needs"]:
         st.markdown(f"- {nfc(need['need'])}")
@@ -65,7 +65,7 @@ def render(loader: DataLoader) -> None:
         render_evidence(item["evidence"], label="근거", key_prefix=f"rej_{item['item'][:8]}")
 
     # 상담 결과
-    section_header("고객 반응과 상담 결과", "📊")
+    section_header("고객 반응과 상담 결과")
     outcome = analysis["outcome"]
     st.markdown(
         f'<span class="badge badge-ok">{nfc(outcome["value"])}</span> '
@@ -76,7 +76,7 @@ def render(loader: DataLoader) -> None:
     render_evidence(outcome["evidence"], label="결과 근거", key_prefix="outcome")
 
     # CRM 상담기록 초안
-    section_header("CRM 상담기록 초안", "🗂️")
+    section_header("CRM 상담기록 초안")
     status = crm.get("status", "DRAFT")
     phase = crm.get("phase", "FC_REVIEW")
     auto = crm.get("auto_finalized", False)
@@ -104,7 +104,7 @@ def render(loader: DataLoader) -> None:
     render_evidence(crm["each_field_evidence"], label="CRM 필드별 근거", key_prefix="crm")
 
     # FC 확인 + Mock 저장 (Stage 3 Tool 연결)
-    section_header("FC 확인 및 Mock 저장", "🔐")
+    section_header("FC 확인 및 Mock 저장")
     session_id = demo_state.get_session_id()
     results = demo_state.get_tool_results()
 
@@ -123,7 +123,7 @@ def render(loader: DataLoader) -> None:
                     f'{res.get("result_ref") or res.get("execution_id")}</span>',
                     unsafe_allow_html=True,
                 )
-        st.warning("⚠️ 실제 CRM·Calendar 시스템에는 저장되지 않았습니다. 모든 기록은 data/runtime/demo.db 의 Mock 데이터입니다.")
+        st.warning("실제 CRM·Calendar 시스템에는 저장되지 않았습니다. 모든 기록은 data/runtime/demo.db 의 Mock 데이터입니다.")
         if st.button("Demo 초기화 (내 기록만)", use_container_width=True):
             demo_state.reset_demo(all_data=False)
             st.rerun()
@@ -164,7 +164,7 @@ def render(loader: DataLoader) -> None:
         st.caption("버튼 클릭 시 Mock CRM 저장 → Mock Calendar 등록 → Feedback 저장이 순서대로 실행됩니다.")
 
     # Next Action
-    section_header("Next Action", "📅")
+    section_header("Next Action")
     for act in next_actions:
         st.markdown(
             f"- **[{nfc(act['action_type'])}]** {nfc(act['title'])} — "
@@ -182,7 +182,7 @@ def render(loader: DataLoader) -> None:
     if st.button("처음으로 돌아가기", use_container_width=True):
         demo_state.reset_to_daily_pick()
         st.rerun()
-    if st.button("🔄 Demo 초기화 (내 실행 기록 재시작)", use_container_width=True):
+    if st.button("Demo 초기화 (내 실행 기록 재시작)", use_container_width=True):
         demo_state.reset_demo(all_data=True)
         st.rerun()
     st.caption("Demo 초기화는 현재 세션의 Mock 실행 데이터만 삭제합니다. 고객 Seed·Expected·Knowledge 문서는 유지됩니다.")
