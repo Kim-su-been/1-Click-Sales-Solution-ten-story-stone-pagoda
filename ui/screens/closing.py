@@ -127,6 +127,7 @@ def render(loader: DataLoader) -> None:
         draft_text = st.text_area(
             "CRM 메모 수정 (선택)",
             value=demo_state.get_fc_draft_text() or nfc(crm.get("note", "")),
+            height=180,
             key="fc_draft_edit",
         )
         if st.button("FC 확인 및 저장", type="primary", use_container_width=True):

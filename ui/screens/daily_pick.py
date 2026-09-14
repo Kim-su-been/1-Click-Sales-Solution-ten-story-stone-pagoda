@@ -105,24 +105,10 @@ def render(loader: DataLoader) -> None:
     )
     st.caption(nfc(reason.get("pick_basis", "")))
 
-    # --- 전화 스크립트 (Compliance 통과) ---
-    scripts = gs.scripts
-    section_header("전화 스크립트")
-    with st.container(border=True):
-        st.markdown(
-            '<span class="badge badge-ok">COMPLIANT</span> '
-            "금지 표현 0건 · 모든 문장이 Knowledge 근거에 연결됨",
-            unsafe_allow_html=True,
-        )
-        call = scripts["CALL_FIRST_OPENING"]
-        st.markdown(f"**{nfc(call['text'])}**")
-        if st.button("Knowledge 근거 보기", key="kd_open"):
-            for se in call["sentence_evidence"]:
-                st.markdown(f"- `{nfc(se['sentence'])}`")
-                render_evidence(se, label="문장 근거", key_prefix=f"cs_{se['sentence'][:10]}")
-
-    # --- 채널 버튼 ---
+    # --- 채널 버튼 (Compliance 통과 스크립트는 발신 전 확인창에서 노출) ---
     section_header("연락 채널")
+    scripts = gs.scripts
+    call = scripts["CALL_FIRST_OPENING"]
     call_script = call["text"]
     sms_script = scripts["SMS"]["text"]
     kakao_script = scripts["KAKAO"]["text"]
@@ -141,9 +127,35 @@ def render(loader: DataLoader) -> None:
     postponed = bool(results_now.get("POSTPONED", {}).get("success"))
     contacted = sms_sent or kakao_sent  # 문자/카톡은 채널이 다르므로 둘 다 보낼 수 있다.
 
+    def _compliance_badge() -> None:
+        st.markdown(
+            '<span class="badge badge-ok">COMPLIANT</span> '
+            "금지 표현 0건 · 모든 문장이 Knowledge 근거에 연결됨",
+            unsafe_allow_html=True,
+        )
+
+    @st.dialog("전화하기")
+    def _confirm_call() -> None:
+        st.write(f"**{nfc(cust.name)} 고객님**에게 전화를 거시겠습니까?")
+        _compliance_badge()
+        st.write(nfc(call_script))
+        b1, b2 = st.columns(2)
+        if b1.button("전화 걸기", type="primary", use_container_width=True, key="call_confirm_send"):
+            res = start_mock_call(session_id, cust_id, call_script)
+            demo_state.set_tool_result("CALL_STARTED", res.to_dict())
+            if res.success:
+                demo_state.set_call_active(True)
+                demo_state.go_to(cfg.SCREEN_CONSULTATION)
+            else:
+                st.error(f"전화를 시작할 수 없습니다: {res.error_message}")
+            st.rerun()
+        if b2.button("취소", use_container_width=True, key="call_confirm_cancel"):
+            st.rerun()
+
     @st.dialog("문자 발송")
     def _confirm_sms() -> None:
         st.write(f"**{nfc(cust.name)} 고객님**에게 아래 문자를 보내시겠습니까?")
+        _compliance_badge()
         st.write(nfc(sms_script))
         b1, b2 = st.columns(2)
         if b1.button("보내기", type="primary", use_container_width=True, key="sms_confirm_send"):
@@ -158,6 +170,7 @@ def render(loader: DataLoader) -> None:
     @st.dialog("카카오톡 발송")
     def _confirm_kakao() -> None:
         st.write(f"**{nfc(cust.name)} 고객님**에게 아래 카카오톡을 보내시겠습니까?")
+        _compliance_badge()
         st.write(nfc(kakao_script))
         b1, b2 = st.columns(2)
         if b1.button("보내기", type="primary", use_container_width=True, key="kakao_confirm_send"):
@@ -171,14 +184,7 @@ def render(loader: DataLoader) -> None:
 
     c1, c2, c3, c4 = st.columns(4)
     if c1.button("전화하기", use_container_width=True, type="primary"):
-        res = start_mock_call(session_id, cust_id, call_script)
-        demo_state.set_tool_result("CALL_STARTED", res.to_dict())
-        if res.success:
-            demo_state.set_call_active(True)
-            demo_state.go_to(cfg.SCREEN_CONSULTATION)
-        else:
-            st.error(f"전화를 시작할 수 없습니다: {res.error_message}")
-        st.rerun()
+        _confirm_call()
 
     # 문자/카톡은 서로 함께 보낼 수 있지만, "나중에(오늘은 연락 안 함)"와는 배타적이다.
     if c2.button("문자 발송", use_container_width=True, disabled=postponed or sms_sent):
