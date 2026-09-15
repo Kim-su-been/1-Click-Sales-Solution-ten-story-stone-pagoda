@@ -11,7 +11,7 @@ import streamlit as st
 import src.config as cfg
 import src.demo_state as demo_state
 from src.data_loader import DataLoadingError, get_loader
-from ui.common import inject_css, render_stepper, render_top_bar
+from ui.common import inject_css, render_sidebar_logo, render_stepper, render_top_bar
 
 
 def main() -> None:
@@ -31,9 +31,11 @@ def main() -> None:
         cfg.SCREEN_CONSULTATION: "상담 진행",
         cfg.SCREEN_CLOSING: "상담 완료",
     }
-    render_top_bar(steps.get(screen, ""), cfg.APP_TITLE)
+    fc_id = next(iter(loader.customers.values())).fc_id if loader.customers else ""
+    render_top_bar(steps.get(screen, ""), cfg.APP_TITLE, fc_id)
 
     with st.sidebar:
+        render_sidebar_logo()
         st.markdown('<div class="sidebar-eyebrow">진행 단계</div>', unsafe_allow_html=True)
         render_stepper(steps, screen)
 

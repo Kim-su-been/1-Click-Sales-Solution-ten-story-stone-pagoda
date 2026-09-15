@@ -102,13 +102,25 @@ def inject_css() -> None:
 
         h1 { font-size: 1.3rem !important; }
 
-        /* --- 상단 유틸리티 바: 좌측 breadcrumb(시스템 내 위치) · 우측 로고 --- */
+        /* --- 상단 유틸리티 바: 좌측 breadcrumb(시스템 내 위치) · 우측 사용자 정보 --- */
         .top-bar { display: flex; justify-content: space-between; align-items: center;
             padding: 0 0 14px 0; margin-bottom: 22px; border-bottom: 1px solid var(--line); }
         .top-bar .breadcrumb { font-size: 0.78rem; color: var(--ink-tertiary); font-weight: 500; }
         .top-bar .breadcrumb b { color: var(--ink-secondary); font-weight: 700; }
-        .top-bar .logo-chip { display: flex; align-items: center; line-height: 0; }
-        .top-bar .logo-chip img { height: 20px; display: block; }
+
+        /* --- 사용자 정보 칩 (상단바 우측) --- */
+        .user-chip { display: flex; align-items: center; gap: 10px; }
+        .user-chip .avatar { width: 30px; height: 30px; border-radius: 50%; flex: 0 0 auto;
+            background: var(--accent); color: #ffffff; font-size: 0.72rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; }
+        .user-chip .info { display: flex; flex-direction: column; line-height: 1.3; }
+        .user-chip .info .name { font-size: 0.82rem; font-weight: 700; color: var(--ink); }
+        .user-chip .info .role { font-size: 0.72rem; color: var(--ink-tertiary); }
+
+        /* --- 사이드바 로고: 사이드바 상단 전체 폭에 걸친 헤더 스트립 --- */
+        .sidebar-logo { padding: 16px 20px; margin: -12px -20px 16px -20px;
+            border-bottom: 1px solid var(--line); }
+        .sidebar-logo img { height: 22px; display: block; }
 
         /* --- Streamlit 기본 헤더 툴바(Deploy/메뉴) 숨김 — 우리 상단 바와 중복되는 흰 띠 제거 --- */
         [data-testid="stHeader"] { display: none; }
@@ -221,28 +233,50 @@ def inject_css() -> None:
     )
 
 
-def render_top_bar(module_label: str, app_title: str) -> None:
-    """상단 유틸리티 바 — 좌측에 현재 위치(breadcrumb), 우측에 로고.
+def render_top_bar(module_label: str, app_title: str, fc_id: str = "") -> None:
+    """상단 유틸리티 바 — 좌측에 현재 위치(breadcrumb), 우측에 로그인한 FC 정보.
 
     사내 시스템에 로그인해 특정 화면에 들어와 있다는 맥락을 주는 최소한의
-    wayfinding 요소. 과거에 있었던 큰 텍스트 배너와 달리 얇고 절제된 형태다.
+    wayfinding 요소. 로고는 사이드바 상단으로 옮기고(render_sidebar_logo),
+    여기엔 실제 데이터에 있는 담당 FC ID만 표시한다(가상 인물명은 만들지 않음).
     """
+    import streamlit as st
+
+    initials = nfc(fc_id).split("-")[0] if fc_id else "FC"
+    user_html = ""
+    if fc_id:
+        user_html = (
+            '<div class="user-chip">'
+            f'<span class="avatar">{initials}</span>'
+            '<span class="info">'
+            f'<span class="name">{nfc(fc_id)}</span>'
+            '<span class="role">담당 컨설턴트</span>'
+            "</span>"
+            "</div>"
+        )
+
+    st.markdown(
+        f'<div class="top-bar">'
+        f'<span class="breadcrumb">{nfc(app_title)} <b>·</b> {nfc(module_label)}</span>'
+        f"{user_html}"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
+
+
+def render_sidebar_logo() -> None:
+    """사이드바 최상단 로고 스트립 — 사내 시스템 소속을 나타내는 브랜드 마크."""
     import base64
     from pathlib import Path
 
     import streamlit as st
 
     logo_path = Path(__file__).parent / "assets" / "dongyang_logo.png"
-    logo_html = ""
-    if logo_path.exists():
-        b64 = base64.b64encode(logo_path.read_bytes()).decode("ascii")
-        logo_html = f'<span class="logo-chip"><img src="data:image/png;base64,{b64}" alt="동양생명" /></span>'
-
+    if not logo_path.exists():
+        return
+    b64 = base64.b64encode(logo_path.read_bytes()).decode("ascii")
     st.markdown(
-        f'<div class="top-bar">'
-        f'<span class="breadcrumb">{nfc(app_title)} <b>·</b> {nfc(module_label)}</span>'
-        f"{logo_html}"
-        f"</div>",
+        f'<div class="sidebar-logo"><img src="data:image/png;base64,{b64}" alt="동양생명" /></div>',
         unsafe_allow_html=True,
     )
 

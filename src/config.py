@@ -39,7 +39,7 @@ TRANSCRIPT_PATH = DEMO_DIR / "consultation-transcript.txt"
 DEMO_AS_OF_DATE = "2026-09-09"
 
 # --- UI ---
-APP_TITLE = "1-Pick Rescue Agent"
+APP_TITLE = "1-PICK Agent"
 
 # --- 화면 상태 (demo_state.py 와 공유) ---
 SCREEN_DAILY_PICK = "DAILY_PICK"
