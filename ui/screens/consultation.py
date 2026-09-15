@@ -61,40 +61,58 @@ def render(loader: DataLoader) -> None:
         if not active:
             st.caption("전화 연결 후 이 화면으로 이동했습니다.")
 
-    # 통화 녹취록 — 통화 연결 후 자동으로 텍스트 변환됨 (실제 상담 흐름과 동일하게 수동 클릭 없이 진행)
+    # 통화 녹취록 — FC가 상담 내용을 직접 불러와 음성 인식(STT) 처리
     section_header("통화 녹취록")
-    if demo_state.is_call_active() and not demo_state.is_transcript_loaded():
-        with st.spinner("통화 내용을 텍스트로 변환하는 중입니다..."):
-            import time
-
-            time.sleep(0.6)
-            session_id = demo_state.get_session_id()
-            from src.agents.orchestrator import process_mock_stt
-
-            res = process_mock_stt(session_id)
-            demo_state.set_tool_result("STT_COMPLETED", res.to_dict())
-            if res.success:
-                demo_state.set_transcript_loaded(True)
-            else:
-                st.error(f"녹취록을 불러올 수 없습니다: {res.error_message}")
-        st.rerun()
-
     if demo_state.is_transcript_loaded():
         st.code(loader.utter_text(), language=None)
         st.caption(f"총 {len(loader.transcript)}개 발화가 텍스트로 변환되었습니다.")
     else:
-        st.caption("통화가 연결되면 녹취록이 자동으로 텍스트로 변환됩니다.")
+        st.caption("상담 내용을 불러오면 음성 인식(STT) 처리를 거쳐 녹취록이 텍스트로 변환됩니다.")
+        if st.button(
+            "상담 내용 불러오기",
+            type="primary",
+            use_container_width=True,
+            disabled=not demo_state.is_call_active(),
+        ):
+            with st.spinner("음성 인식(STT) 처리 중입니다..."):
+                import time
 
-    # 상담 완료 및 분석하기
+                time.sleep(1.0)
+                session_id = demo_state.get_session_id()
+                from src.agents.orchestrator import process_mock_stt
+
+                res = process_mock_stt(session_id)
+                demo_state.set_tool_result("STT_COMPLETED", res.to_dict())
+                if res.success:
+                    demo_state.set_transcript_loaded(True)
+                else:
+                    st.error(f"녹취록을 불러올 수 없습니다: {res.error_message}")
+            st.rerun()
+
+    # 상담 종료 → DB 반영 → 완료 및 분석 (단계별 진행)
     st.markdown("---")
-    if st.button("상담 완료 및 분석하기", type="primary", use_container_width=True):
-        session_id = demo_state.get_session_id()
-        from src.agents.orchestrator import complete_mock_call
+    if not demo_state.is_consultation_ended():
+        if st.button(
+            "상담 종료하기",
+            type="primary",
+            use_container_width=True,
+            disabled=not demo_state.is_transcript_loaded(),
+        ):
+            with st.spinner("DB 반영 중입니다..."):
+                import time
 
-        call_res = complete_mock_call(session_id, cust.customer_id)
-        demo_state.set_tool_result("CALL_COMPLETED", call_res.to_dict())
-        demo_state.set_transcript_loaded(True)
-        demo_state.go_to(cfg.SCREEN_CLOSING)
-        st.rerun()
+                time.sleep(1.0)
+                session_id = demo_state.get_session_id()
+                from src.agents.orchestrator import complete_mock_call
 
-    st.caption("상담을 완료하면 통화 내용을 분석한 결과가 다음 화면에 표시됩니다.")
+                call_res = complete_mock_call(session_id, cust.customer_id)
+                demo_state.set_tool_result("CALL_COMPLETED", call_res.to_dict())
+                demo_state.set_consultation_ended(True)
+            st.rerun()
+        st.caption("녹취록 텍스트 변환이 끝나면 상담을 종료할 수 있습니다.")
+    else:
+        st.markdown('<span class="badge badge-ok">상담 내용 저장 완료</span>', unsafe_allow_html=True)
+        if st.button("상담 완료 및 분석하기", type="primary", use_container_width=True):
+            demo_state.go_to(cfg.SCREEN_CLOSING)
+            st.rerun()
+        st.caption("다음 화면에서 통화 내용을 분석한 결과를 확인할 수 있습니다.")

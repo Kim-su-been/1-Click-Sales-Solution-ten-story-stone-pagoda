@@ -12,6 +12,7 @@ from src.config import SCREEN_DAILY_PICK
 _STATE_KEY = "demo_screen"
 _TRANSCRIPT_LOADED_KEY = "transcript_loaded"
 _CALL_ACTIVE_KEY = "call_active"
+_CONSULTATION_ENDED_KEY = "consultation_ended"
 _CRM_CONFIRMED_KEY = "crm_fc_confirmed"
 _SESSION_ID_KEY = "demo_session_id"
 _DRAFT_TEXT_KEY = "fc_draft_text"
@@ -28,6 +29,8 @@ def _ensure_state():
         st.session_state[_TRANSCRIPT_LOADED_KEY] = False
     if _CALL_ACTIVE_KEY not in st.session_state:
         st.session_state[_CALL_ACTIVE_KEY] = False
+    if _CONSULTATION_ENDED_KEY not in st.session_state:
+        st.session_state[_CONSULTATION_ENDED_KEY] = False
     if _CRM_CONFIRMED_KEY not in st.session_state:
         st.session_state[_CRM_CONFIRMED_KEY] = False
     if _SESSION_ID_KEY not in st.session_state:
@@ -61,6 +64,7 @@ def reset_to_daily_pick() -> None:
     st.session_state[_STATE_KEY] = SCREEN_DAILY_PICK
     st.session_state[_TRANSCRIPT_LOADED_KEY] = False
     st.session_state[_CALL_ACTIVE_KEY] = False
+    st.session_state[_CONSULTATION_ENDED_KEY] = False
     st.session_state[_CRM_CONFIRMED_KEY] = False
 
 
@@ -89,6 +93,19 @@ def set_call_active(active: bool) -> None:
     import streamlit as st
 
     st.session_state[_CALL_ACTIVE_KEY] = active
+
+
+def is_consultation_ended() -> bool:
+    import streamlit as st
+
+    _ensure_state()
+    return st.session_state[_CONSULTATION_ENDED_KEY]
+
+
+def set_consultation_ended(ended: bool) -> None:
+    import streamlit as st
+
+    st.session_state[_CONSULTATION_ENDED_KEY] = ended
 
 
 # --- CRM 확인 상태 (Mock) ---
@@ -168,6 +185,7 @@ def reset_demo(all_data: bool = False) -> None:
     st.session_state[_STATE_KEY] = SCREEN_DAILY_PICK
     st.session_state[_TRANSCRIPT_LOADED_KEY] = False
     st.session_state[_CALL_ACTIVE_KEY] = False
+    st.session_state[_CONSULTATION_ENDED_KEY] = False
     st.session_state[_CRM_CONFIRMED_KEY] = False
     st.session_state[_DRAFT_TEXT_KEY] = ""
     st.session_state[_TOOL_RESULTS_KEY] = {}

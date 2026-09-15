@@ -32,7 +32,7 @@ def main() -> None:
         cfg.SCREEN_CLOSING: "상담 완료",
     }
     fc_id = next(iter(loader.customers.values())).fc_id if loader.customers else ""
-    render_top_bar(steps.get(screen, ""), cfg.APP_TITLE, fc_id)
+    render_top_bar(cfg.APP_TITLE, fc_id)
 
     with st.sidebar:
         render_sidebar_logo()

@@ -70,7 +70,7 @@ def render(loader: DataLoader) -> None:
             for item in pick_score.items
             if item.points > 0
         ]
-        render_data_table(["평가 항목", "산출 근거", "배점"], rows, num_col=2, mono_col=1)
+        render_data_table(["평가 항목", "산출 근거", "배점"], rows, num_col=2)
         st.caption(
             f"합계 {pick_score.total}점 — 연락 가능한 고객 중 이 점수가 가장 높아 오늘의 1-Pick으로 선정되었습니다."
         )

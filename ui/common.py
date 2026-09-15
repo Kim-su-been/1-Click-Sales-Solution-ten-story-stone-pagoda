@@ -105,8 +105,7 @@ def inject_css() -> None:
         /* --- 상단 유틸리티 바: 좌측 breadcrumb(시스템 내 위치) · 우측 사용자 정보 --- */
         .top-bar { display: flex; justify-content: space-between; align-items: center;
             padding: 0 0 14px 0; margin-bottom: 22px; border-bottom: 1px solid var(--line); }
-        .top-bar .breadcrumb { font-size: 0.78rem; color: var(--ink-tertiary); font-weight: 500; }
-        .top-bar .breadcrumb b { color: var(--ink-secondary); font-weight: 700; }
+        .top-bar .breadcrumb { font-size: 1.05rem; color: var(--ink); font-weight: 700; letter-spacing: -.01em; }
 
         /* --- 사용자 정보 칩 (상단바 우측) --- */
         .user-chip { display: flex; align-items: center; gap: 10px; }
@@ -118,15 +117,16 @@ def inject_css() -> None:
         .user-chip .info .role { font-size: 0.72rem; color: var(--ink-tertiary); }
 
         /* --- 사이드바 로고: 사이드바 상단 전체 폭에 걸친 헤더 스트립 --- */
-        .sidebar-logo { padding: 16px 20px; margin: -12px -20px 16px -20px;
+        .sidebar-logo { padding: 14px 20px; margin: -12px -20px 16px -20px;
             border-bottom: 1px solid var(--line); }
-        .sidebar-logo img { height: 22px; display: block; }
+        .sidebar-logo img { height: 34px; display: block; }
 
         /* --- Streamlit 기본 헤더 툴바(Deploy/메뉴) 숨김 — 우리 상단 바와 중복되는 흰 띠 제거 --- */
         [data-testid="stHeader"] { display: none; }
 
         /* --- 사이드바: Streamlit 기본값(하단 96px 여백 등)을 걷어내 더 조밀하게 --- */
         [data-testid="stSidebarContent"] { padding-top: 0.75rem; }
+        [data-testid="stSidebarHeader"] { height: 40px !important; min-height: 40px !important; }
         [data-testid="stSidebarUserContent"] { padding-bottom: 12px !important; }
         /* 펼쳐진 상태에서만 폭을 좁히고, 접힌 상태(aria-expanded="false")는 강제하지 않는다.
            그래야 사이드바를 접었을 때 본문이 그만큼 다시 채워진다. */
@@ -188,13 +188,15 @@ def inject_css() -> None:
         /* --- 사이드바 진행 스테퍼: 업무 시스템 좌측 메뉴처럼 STEP 번호 + 라벨,
            원형 도트 대신 좌측 보더로 현재 위치를 표시 --- */
         .stepper { margin: 4px 0 20px 0; }
-        .step { padding: 7px 0 7px 14px; margin-bottom: 1px; border-left: 3px solid transparent; }
+        /* 좌측 보더를 사이드바 실제 가장자리까지 붙이기 위해 sidebar 좌측 padding(20px)만큼
+           음수 마진으로 빼고, 텍스트는 padding으로 다시 안쪽에 배치한다. */
+        .step { padding: 7px 0 7px 17px; margin: 0 0 1px -20px; border-left: 3px solid transparent; }
         .step-eyebrow { font-size: 0.66rem; font-weight: 700; color: var(--ink-tertiary);
             letter-spacing: .04em; margin-bottom: 2px; }
         .step-label { font-size: 0.86rem; color: var(--ink-tertiary); }
-        .step-done { border-left-color: var(--ok); }
         .step-done .step-eyebrow { color: var(--ok); }
         .step-done .step-label { color: var(--ink-secondary); }
+        /* 현재 단계에서만 좌측 컬러 보더를 표시한다 (완료/예정 단계는 보더 없음) */
         .step-current { border-left-color: var(--accent); }
         .step-current .step-eyebrow { color: var(--accent); }
         .step-current .step-label { color: var(--ink); font-weight: 700; }
@@ -233,12 +235,11 @@ def inject_css() -> None:
     )
 
 
-def render_top_bar(module_label: str, app_title: str, fc_id: str = "") -> None:
-    """상단 유틸리티 바 — 좌측에 현재 위치(breadcrumb), 우측에 로그인한 FC 정보.
+def render_top_bar(app_title: str, fc_id: str = "") -> None:
+    """상단 유틸리티 바 — 좌측에 앱 이름, 우측에 로그인한 FC 정보.
 
-    사내 시스템에 로그인해 특정 화면에 들어와 있다는 맥락을 주는 최소한의
-    wayfinding 요소. 로고는 사이드바 상단으로 옮기고(render_sidebar_logo),
-    여기엔 실제 데이터에 있는 담당 FC ID만 표시한다(가상 인물명은 만들지 않음).
+    로고는 사이드바 상단으로 옮기고(render_sidebar_logo), 여기엔 실제 데이터에
+    있는 담당 FC ID만 표시한다(가상 인물명은 만들지 않음).
     """
     import streamlit as st
 
@@ -257,7 +258,7 @@ def render_top_bar(module_label: str, app_title: str, fc_id: str = "") -> None:
 
     st.markdown(
         f'<div class="top-bar">'
-        f'<span class="breadcrumb">{nfc(app_title)} <b>·</b> {nfc(module_label)}</span>'
+        f'<span class="breadcrumb">{nfc(app_title)}</span>'
         f"{user_html}"
         f"</div>",
         unsafe_allow_html=True,
