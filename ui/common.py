@@ -82,22 +82,8 @@ def inject_css() -> None:
             --radius-pill: 999px;
         }
 
-        /* 우리다움체 (우리금융그룹 공식 무료 서체) — 로드 실패 시 시스템 고딕 폰트로 자연스럽게 대체 */
-        @font-face {
-            font-family: "Wooridaum";
-            src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2205@v1.0/WooridaumL.woff2") format("woff2");
-            font-weight: 300; font-style: normal; font-display: swap;
-        }
-        @font-face {
-            font-family: "Wooridaum";
-            src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2205@v1.0/WooridaumR.woff2") format("woff2");
-            font-weight: 400; font-style: normal; font-display: swap;
-        }
-        @font-face {
-            font-family: "Wooridaum";
-            src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2205@v1.0/WooridaumB.woff2") format("woff2");
-            font-weight: 700; font-style: normal; font-display: swap;
-        }
+        /* Pretendard — 국내 금융/기업 서비스에서 널리 쓰이는 고딕 서체. 로드 실패 시 시스템 고딕 폰트로 대체 */
+        @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css");
 
         /* --- 관리자 화면 프레임: 회색 캔버스 위에 흰색 패널이 떠 있는 ERP 레이아웃 --- */
         [data-testid="stMain"] { background: var(--surface-page); }
@@ -111,7 +97,7 @@ def inject_css() -> None:
         }
         html, body, [class*="css"] {
             color: var(--ink);
-            font-family: "Wooridaum", "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+            font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
                 "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", sans-serif;
         }
 
