@@ -113,19 +113,27 @@ def inject_css() -> None:
             background: var(--accent); color: #ffffff; font-size: 0.72rem; font-weight: 700;
             display: flex; align-items: center; justify-content: center; }
         .user-chip .info { display: flex; flex-direction: column; line-height: 1.3; }
-        .user-chip .info .name { font-size: 0.82rem; font-weight: 700; color: var(--ink); }
+        .user-chip .info .name { font-size: 0.82rem; font-weight: 700; color: var(--ink);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
         .user-chip .info .role { font-size: 0.72rem; color: var(--ink-tertiary); }
 
         /* --- 사이드바 로고: 사이드바 상단, 가운데 정렬 --- */
         .sidebar-logo { display: flex; justify-content: center; align-items: center;
             padding: 8px 20px; margin: -12px -20px 14px -20px; }
-        .sidebar-logo img { height: 36px; display: block; }
+        .sidebar-logo img { height: 24px; display: block; }
 
         /* --- Streamlit 기본 헤더 툴바(Deploy/메뉴) 숨김 — 우리 상단 바와 중복되는 흰 띠 제거 --- */
         [data-testid="stHeader"] { display: none; }
 
-        /* --- 사이드바: Streamlit 기본값(하단 96px 여백 등)을 걷어내 더 조밀하게 --- */
-        [data-testid="stSidebarContent"] { padding-top: 0.75rem; }
+        /* --- 사이드바: Streamlit 기본값(하단 96px 여백 등)을 걷어내 더 조밀하게.
+           좌우 padding을 여기서 직접 20px로 고정해, 아래 .step/.sidebar-logo/.top-bar 의
+           음수 마진(가장자리까지 붙이는 값)이 항상 정확히 맞도록 보장한다
+           (Streamlit 기본값에 의존하면 버전/렌더링에 따라 어긋날 수 있음). --- */
+        [data-testid="stSidebarContent"] {
+            padding-top: 0.75rem;
+            padding-left: 20px !important;
+            padding-right: 20px !important;
+        }
         [data-testid="stSidebarHeader"] { height: 30px !important; min-height: 30px !important; }
         [data-testid="stSidebarUserContent"] { padding-bottom: 12px !important; }
         /* 펼쳐진 상태에서만 폭을 좁히고, 접힌 상태(aria-expanded="false")는 강제하지 않는다.
@@ -153,22 +161,24 @@ def inject_css() -> None:
         .badge-warn { background: var(--warn-bg); color: var(--warn); }
         .badge-info { background: var(--accent-weak); color: var(--accent); }
 
-        /* --- 근거 블록 --- */
+        /* --- 근거 블록: 근거 코드(evidenceRef)는 기술적 식별자이므로 모노스페이스로 구분 --- */
         .ev-block { background: var(--surface-muted); border-radius: var(--radius-control);
             padding: 10px 14px; margin: 6px 0; font-size: 0.86rem; color: var(--ink); }
+        .ev-block code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 0.82em; background: none; padding: 0; }
 
         /* --- 레코드 헤더: 라벨/값 필드 그리드 (ERP 상세화면 정보 블록 스타일) --- */
         .field-row { display: flex; gap: 32px; flex-wrap: wrap; margin-top: 16px; }
         .field-row .field { display: flex; flex-direction: column; gap: 4px; }
         .field-row .field-label { font-size: 0.68rem; font-weight: 700; color: var(--ink-tertiary);
-            text-transform: uppercase; letter-spacing: .04em; }
+            text-transform: uppercase; letter-spacing: .07em; }
         .field-row .field-value { font-size: 0.92rem; font-weight: 600; color: var(--ink);
             font-variant-numeric: tabular-nums; }
 
         /* --- 데이터 테이블: 업무 시스템 그리드 스타일 (헤더 행 + 줄무늬 행) --- */
         .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         .data-table th { text-align: left; font-size: 0.7rem; font-weight: 700; color: var(--ink-tertiary);
-            text-transform: uppercase; letter-spacing: .03em; padding: 9px 12px;
+            text-transform: uppercase; letter-spacing: .06em; padding: 9px 12px;
             border-bottom: 1px solid var(--line); background: var(--surface-muted); }
         .data-table td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--ink); }
         .data-table tbody tr:last-child td { border-bottom: none; }
@@ -183,9 +193,9 @@ def inject_css() -> None:
         .stepper { margin: 4px 0 20px 0; }
         /* 좌측 보더를 사이드바 실제 가장자리까지 붙이기 위해 sidebar 좌측 padding(20px)만큼
            음수 마진으로 빼고, 텍스트는 padding으로 다시 안쪽에 배치한다. */
-        .step { padding: 7px 0 7px 17px; margin: 0 0 1px -30px; border-left: 3px solid transparent; }
+        .step { padding: 7px 0 7px 13px; margin: 0 0 1px -14px; border-left: 3px solid transparent; }
         .step-eyebrow { font-size: 0.66rem; font-weight: 700; color: var(--ink-tertiary);
-            letter-spacing: .04em; margin-bottom: 2px; }
+            letter-spacing: .07em; margin-bottom: 2px; }
         .step-label { font-size: 0.86rem; color: var(--ink-tertiary); }
         .step-done .step-eyebrow { color: var(--ok); }
         .step-done .step-label { color: var(--ink-secondary); }
