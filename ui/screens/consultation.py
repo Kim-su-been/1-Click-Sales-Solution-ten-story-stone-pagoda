@@ -8,12 +8,10 @@ import streamlit as st
 import src.config as cfg
 from src import demo_state
 from src.data_loader import DataLoader
-from ui.common import nfc, page_header, section_header
+from ui.common import nfc, section_header
 
 
 def render(loader: DataLoader) -> None:
-    page_header("상담 진행", "STEP 2 / 3 · 통화 진행")
-
     # Runtime Customer Selection 결과로 1-Pick 고객 식별
     from src.agents.orchestrator import run_demo_pipeline
 
@@ -63,17 +61,9 @@ def render(loader: DataLoader) -> None:
 
     # 통화 녹취록 — FC가 상담 내용을 직접 불러와 음성 인식(STT) 처리
     section_header("통화 녹취록")
-    if demo_state.is_transcript_loaded():
-        st.code(loader.utter_text(), language=None)
-        st.caption(f"총 {len(loader.transcript)}개 발화가 텍스트로 변환되었습니다.")
-    else:
+    if not demo_state.is_transcript_loaded():
         st.caption("상담 내용을 불러오면 음성 인식(STT) 처리를 거쳐 녹취록이 텍스트로 변환됩니다.")
-        if st.button(
-            "상담 내용 불러오기",
-            type="primary",
-            use_container_width=True,
-            disabled=not demo_state.is_call_active(),
-        ):
+        if st.button("상담 내용 불러오기", type="primary", use_container_width=True):
             with st.spinner("음성 인식(STT) 처리 중입니다..."):
                 import time
 
@@ -88,16 +78,15 @@ def render(loader: DataLoader) -> None:
                 else:
                     st.error(f"녹취록을 불러올 수 없습니다: {res.error_message}")
             st.rerun()
+        return
 
-    # 상담 종료 → DB 반영 → 완료 및 분석 (단계별 진행)
+    st.code(loader.utter_text(), language=None)
+    st.caption(f"총 {len(loader.transcript)}개 발화가 텍스트로 변환되었습니다.")
+
+    # 상담 종료 → DB 반영 → 완료 및 분석 (녹취록이 준비된 뒤에만 다음 단계 버튼을 보여준다)
     st.markdown("---")
     if not demo_state.is_consultation_ended():
-        if st.button(
-            "상담 종료하기",
-            type="primary",
-            use_container_width=True,
-            disabled=not demo_state.is_transcript_loaded(),
-        ):
+        if st.button("상담 종료하기", type="primary", use_container_width=True):
             with st.spinner("DB 반영 중입니다..."):
                 import time
 
@@ -109,7 +98,6 @@ def render(loader: DataLoader) -> None:
                 demo_state.set_tool_result("CALL_COMPLETED", call_res.to_dict())
                 demo_state.set_consultation_ended(True)
             st.rerun()
-        st.caption("녹취록 텍스트 변환이 끝나면 상담을 종료할 수 있습니다.")
     else:
         st.markdown('<span class="badge badge-ok">상담 내용 저장 완료</span>', unsafe_allow_html=True)
         if st.button("상담 완료 및 분석하기", type="primary", use_container_width=True):

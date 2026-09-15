@@ -116,17 +116,17 @@ def inject_css() -> None:
         .user-chip .info .name { font-size: 0.82rem; font-weight: 700; color: var(--ink); }
         .user-chip .info .role { font-size: 0.72rem; color: var(--ink-tertiary); }
 
-        /* --- 사이드바 로고: 사이드바 상단 전체 폭에 걸친 헤더 스트립 --- */
-        .sidebar-logo { padding: 14px 20px; margin: -12px -20px 16px -20px;
-            border-bottom: 1px solid var(--line); }
-        .sidebar-logo img { height: 34px; display: block; }
+        /* --- 사이드바 로고: 사이드바 상단, 가운데 정렬 --- */
+        .sidebar-logo { display: flex; justify-content: center; align-items: center;
+            padding: 8px 20px; margin: -12px -20px 14px -20px; }
+        .sidebar-logo img { height: 36px; display: block; }
 
         /* --- Streamlit 기본 헤더 툴바(Deploy/메뉴) 숨김 — 우리 상단 바와 중복되는 흰 띠 제거 --- */
         [data-testid="stHeader"] { display: none; }
 
         /* --- 사이드바: Streamlit 기본값(하단 96px 여백 등)을 걷어내 더 조밀하게 --- */
         [data-testid="stSidebarContent"] { padding-top: 0.75rem; }
-        [data-testid="stSidebarHeader"] { height: 40px !important; min-height: 40px !important; }
+        [data-testid="stSidebarHeader"] { height: 30px !important; min-height: 30px !important; }
         [data-testid="stSidebarUserContent"] { padding-bottom: 12px !important; }
         /* 펼쳐진 상태에서만 폭을 좁히고, 접힌 상태(aria-expanded="false")는 강제하지 않는다.
            그래야 사이드바를 접었을 때 본문이 그만큼 다시 채워진다. */
@@ -135,12 +135,6 @@ def inject_css() -> None:
         [data-testid="stSidebar"][aria-expanded="false"] { min-width: 0 !important; width: 0 !important; }
         .sidebar-eyebrow { font-size: 0.74rem; font-weight: 700; letter-spacing: .05em;
             color: var(--ink-tertiary); text-transform: uppercase; margin: 0 0 10px 1px; }
-
-        /* --- 페이지 헤더 --- */
-        .page-eyebrow { font-size: 0.76rem; font-weight: 700; color: var(--accent);
-            letter-spacing: .03em; margin: 0 0 6px 1px; }
-        .page-title { font-size: 1.6rem; font-weight: 700; color: var(--ink); letter-spacing: -.015em;
-            margin: 0 0 32px 0; }
 
         /* --- 섹션 헤더: 하단 보더로 구획을 명확히 구분 --- */
         .section-header { font-size: 1rem; font-weight: 700; color: var(--ink);
@@ -190,7 +184,7 @@ def inject_css() -> None:
         .stepper { margin: 4px 0 20px 0; }
         /* 좌측 보더를 사이드바 실제 가장자리까지 붙이기 위해 sidebar 좌측 padding(20px)만큼
            음수 마진으로 빼고, 텍스트는 padding으로 다시 안쪽에 배치한다. */
-        .step { padding: 7px 0 7px 17px; margin: 0 0 1px -20px; border-left: 3px solid transparent; }
+        .step { padding: 7px 0 7px 17px; margin: 0 0 1px -30px; border-left: 3px solid transparent; }
         .step-eyebrow { font-size: 0.66rem; font-weight: 700; color: var(--ink-tertiary);
             letter-spacing: .04em; margin-bottom: 2px; }
         .step-label { font-size: 0.86rem; color: var(--ink-tertiary); }
@@ -235,11 +229,13 @@ def inject_css() -> None:
     )
 
 
-def render_top_bar(app_title: str, fc_id: str = "") -> None:
-    """상단 유틸리티 바 — 좌측에 앱 이름, 우측에 로그인한 FC 정보.
+def render_top_bar(title_text: str, fc_id: str = "") -> None:
+    """상단 유틸리티 바 — 좌측에 현재 단계/화면명, 우측에 로그인한 FC 정보.
 
-    로고는 사이드바 상단으로 옮기고(render_sidebar_logo), 여기엔 실제 데이터에
-    있는 담당 FC ID만 표시한다(가상 인물명은 만들지 않음).
+    화면마다 반복되던 큰 페이지 제목(page_header)을 없애고 이 한 줄로
+    대체해 스크롤 길이를 줄인다. 로고는 사이드바 상단에 있고
+    (render_sidebar_logo), 여기엔 실제 데이터에 있는 담당 FC ID만
+    표시한다(가상 인물명은 만들지 않음).
     """
     import streamlit as st
 
@@ -258,7 +254,7 @@ def render_top_bar(app_title: str, fc_id: str = "") -> None:
 
     st.markdown(
         f'<div class="top-bar">'
-        f'<span class="breadcrumb">{nfc(app_title)}</span>'
+        f'<span class="breadcrumb">{nfc(title_text)}</span>'
         f"{user_html}"
         f"</div>",
         unsafe_allow_html=True,
@@ -313,17 +309,6 @@ def render_data_table(headers: list[str], rows: list[list[str]], num_col: int | 
     st.markdown(
         f'<table class="data-table"><thead><tr>{thead}</tr></thead>'
         f'<tbody>{"".join(body_rows)}</tbody></table>',
-        unsafe_allow_html=True,
-    )
-
-
-def page_header(title: str, step_label: str) -> None:
-    """화면 최상단 제목 — 스테퍼 라벨(eyebrow) + 제목 조합으로 통일."""
-    import streamlit as st
-
-    st.markdown(
-        f'<div class="page-eyebrow">{nfc(step_label)}</div>'
-        f'<div class="page-title">{nfc(title)}</div>',
         unsafe_allow_html=True,
     )
 

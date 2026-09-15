@@ -8,7 +8,7 @@ import streamlit as st
 import src.config as cfg
 from src import demo_state
 from src.data_loader import DataLoader
-from ui.common import nfc, page_header, render_data_table, render_evidence, section_header
+from ui.common import nfc, render_data_table, render_evidence, section_header
 
 
 def _format_months(m: int | None) -> str:
@@ -16,8 +16,6 @@ def _format_months(m: int | None) -> str:
 
 
 def render(loader: DataLoader) -> None:
-    page_header("오늘의 1-Pick", "STEP 1 / 3 · 고객 선정")
-
     # Runtime Agent 결과 직접 계산 (Expected 미사용)
     from src.agents.customer_selection import run_customer_selection, load_contracts_by_customer
     from src.agents.grounding_safety import run_grounding_safety

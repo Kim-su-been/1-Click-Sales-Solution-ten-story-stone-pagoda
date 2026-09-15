@@ -32,7 +32,9 @@ def main() -> None:
         cfg.SCREEN_CLOSING: "상담 완료",
     }
     fc_id = next(iter(loader.customers.values())).fc_id if loader.customers else ""
-    render_top_bar(cfg.APP_TITLE, fc_id)
+    step_keys = list(steps.keys())
+    step_idx = step_keys.index(screen) if screen in step_keys else 0
+    render_top_bar(f"STEP {step_idx + 1}/3 · {steps[step_keys[step_idx]]}", fc_id)
 
     with st.sidebar:
         render_sidebar_logo()

@@ -8,7 +8,7 @@ import streamlit as st
 
 from src import demo_state
 from src.data_loader import DataLoader
-from ui.common import humanize, nfc, page_header, render_evidence, section_header
+from ui.common import humanize, nfc, render_evidence, section_header
 
 
 def _transcript_snippet(loader: DataLoader, evidenceRef: str) -> str:
@@ -21,8 +21,6 @@ def _transcript_snippet(loader: DataLoader, evidenceRef: str) -> str:
 
 
 def render(loader: DataLoader) -> None:
-    page_header("상담 완료", "STEP 3 / 3 · 분석 및 마무리")
-
     # Runtime Conversation Analysis 결과로 교체 (Expected 미사용)
     from src.agents.orchestrator import run_demo_pipeline
 
@@ -166,12 +164,15 @@ def render(loader: DataLoader) -> None:
     )
     render_evidence(calendar.get("evidence"), label="캘린더 근거", key_prefix="cal")
 
-    # 처음으로 / Demo 초기화
+    # 처음으로 / Demo 초기화 — 두 번째 동작은 QA/데모 초기화 용도라 덜 눈에 띄게 나란히 배치
     st.markdown("---")
-    if st.button("처음으로 돌아가기", use_container_width=True):
-        demo_state.reset_to_daily_pick()
-        st.rerun()
-    if st.button("처음부터 다시 시작", use_container_width=True):
-        demo_state.reset_demo(all_data=True)
-        st.rerun()
+    col_reset1, col_reset2 = st.columns(2)
+    with col_reset1:
+        if st.button("처음으로 돌아가기", use_container_width=True):
+            demo_state.reset_to_daily_pick()
+            st.rerun()
+    with col_reset2:
+        if st.button("처음부터 다시 시작", use_container_width=True):
+            demo_state.reset_demo(all_data=True)
+            st.rerun()
     st.caption("초기화하면 현재 세션의 실행 기록만 삭제됩니다. 고객 데이터와 지식 문서는 유지됩니다.")
