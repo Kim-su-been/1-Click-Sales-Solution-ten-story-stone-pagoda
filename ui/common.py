@@ -61,9 +61,9 @@ def inject_css() -> None:
             --ok-bg: #e5f2ea;
             --warn: #9a5b0a;
             --warn-bg: #faf0dd;
-            --radius-card: 10px;
-            --radius-control: 8px;
-            --radius-badge: 4px;
+            --radius-card: 4px;
+            --radius-control: 4px;
+            --radius-badge: 2px;
             --radius-pill: 999px;
         }
 
@@ -88,7 +88,7 @@ def inject_css() -> None:
         [data-testid="stMain"] { background: var(--surface-page); }
         [data-testid="stAppViewContainer"] .block-container {
             max-width: 1120px;
-            margin-top: 4.5rem; margin-bottom: 32px;
+            margin-top: 1.75rem; margin-bottom: 32px;
             background: var(--surface);
             border: 1px solid var(--line);
             border-radius: var(--radius-card);
@@ -113,8 +113,9 @@ def inject_css() -> None:
         /* --- Streamlit 기본 헤더 툴바(Deploy/메뉴) 숨김 — 우리 상단 바와 중복되는 흰 띠 제거 --- */
         [data-testid="stHeader"] { display: none; }
 
-        /* --- 사이드바 --- */
+        /* --- 사이드바: Streamlit 기본값(하단 96px 여백 등)을 걷어내 더 조밀하게 --- */
         [data-testid="stSidebarContent"] { padding-top: 0.75rem; }
+        [data-testid="stSidebarUserContent"] { padding-bottom: 12px !important; }
         /* 펼쳐진 상태에서만 폭을 좁히고, 접힌 상태(aria-expanded="false")는 강제하지 않는다.
            그래야 사이드바를 접었을 때 본문이 그만큼 다시 채워진다. */
         [data-testid="stSidebar"][aria-expanded="true"] { min-width: 230px !important; width: 230px !important; }
@@ -175,7 +176,7 @@ def inject_css() -> None:
         /* --- 사이드바 진행 스테퍼: 업무 시스템 좌측 메뉴처럼 STEP 번호 + 라벨,
            원형 도트 대신 좌측 보더로 현재 위치를 표시 --- */
         .stepper { margin: 4px 0 20px 0; }
-        .step { padding: 9px 0 9px 14px; margin-bottom: 2px; border-left: 3px solid transparent; }
+        .step { padding: 7px 0 7px 14px; margin-bottom: 1px; border-left: 3px solid transparent; }
         .step-eyebrow { font-size: 0.66rem; font-weight: 700; color: var(--ink-tertiary);
             letter-spacing: .04em; margin-bottom: 2px; }
         .step-label { font-size: 0.86rem; color: var(--ink-tertiary); }
