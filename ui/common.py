@@ -60,11 +60,10 @@ def inject_css() -> None:
             --ok-bg: #e5f2ea;
             --warn: #9a5b0a;
             --warn-bg: #faf0dd;
-            --radius-card: 8px;
-            --radius-control: 6px;
+            --radius-card: 10px;
+            --radius-control: 8px;
             --radius-badge: 4px;
             --radius-pill: 999px;
-            --shadow-card: 0 1px 2px rgba(15,23,42,0.05);
         }
 
         /* 우리다움체 (우리금융그룹 공식 무료 서체) — 로드 실패 시 시스템 고딕 폰트로 자연스럽게 대체 */
@@ -111,17 +110,17 @@ def inject_css() -> None:
         /* --- 페이지 헤더 --- */
         .page-eyebrow { font-size: 0.76rem; font-weight: 700; color: var(--accent);
             letter-spacing: .03em; margin: 0 0 6px 1px; }
-        .page-title { font-size: 1.6rem; font-weight: 700; color: var(--ink); letter-spacing: -.005em;
-            margin: 0 0 28px 0; }
+        .page-title { font-size: 1.6rem; font-weight: 700; color: var(--ink); letter-spacing: -.015em;
+            margin: 0 0 32px 0; }
 
         /* --- 섹션 헤더: 하단 보더로 구획을 명확히 구분 --- */
         .section-header { font-size: 1rem; font-weight: 700; color: var(--ink);
             margin: 32px 0 12px 0; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
         .section-header.first { margin-top: 4px; }
 
-        /* --- 카드: 좌측 accent 보더로 강조, 그림자는 최소화 --- */
+        /* --- 카드: 좌측 accent 보더로 강조. Apple 시스템처럼 그림자 없이 보더만으로 구분 --- */
         .pick-card { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent);
-            border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 20px 24px; }
+            border-radius: var(--radius-card); padding: 24px; }
         .pick-card .title { font-size: 1.1rem; font-weight: 700; color: var(--ink); margin-top: 10px; }
         .pick-card .score-badge { display: inline-block; background: var(--accent); color: #ffffff;
             font-weight: 700; padding: 5px 14px; border-radius: var(--radius-badge); font-size: 0.88rem;
