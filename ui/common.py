@@ -92,7 +92,7 @@ def inject_css() -> None:
             background: var(--surface);
             border: 1px solid var(--line);
             border-radius: var(--radius-card);
-            padding: 28px 40px 40px;
+            padding: 22px 32px 32px;
         }
         html, body, [class*="css"] {
             color: var(--ink);
@@ -104,7 +104,7 @@ def inject_css() -> None:
 
         /* --- 상단 유틸리티 바: 좌측 breadcrumb(시스템 내 위치) · 우측 사용자 정보 --- */
         .top-bar { display: flex; justify-content: space-between; align-items: center;
-            padding: 0 0 14px 0; margin-bottom: 22px; border-bottom: 1px solid var(--line); }
+            padding: 0 0 10px 0; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
         .top-bar .breadcrumb { font-size: 1.05rem; color: var(--ink); font-weight: 700; letter-spacing: -.01em; }
 
         /* --- 사용자 정보 칩 (상단바 우측) --- */
@@ -117,22 +117,24 @@ def inject_css() -> None:
             font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
         .user-chip .info .role { font-size: 0.72rem; color: var(--ink-tertiary); }
 
-        /* --- 사이드바 로고: 사이드바 상단, 가운데 정렬 --- */
+        /* --- 사이드바 로고: 사이드바 상단, 가운데 정렬.
+           음수 마진으로 가장자리까지 "빼내는" 방식 대신, 사이드바 자체의 좌우 padding을
+           작은 값으로 직접 고정해 불필요한 여백을 없앤다 (아래 참고). --- */
         .sidebar-logo { display: flex; justify-content: center; align-items: center;
-            padding: 8px 20px; margin: -12px -20px 14px -20px; }
+            padding: 8px 0; margin-top: -12px; margin-bottom: 14px; }
         .sidebar-logo img { height: 24px; display: block; }
 
         /* --- Streamlit 기본 헤더 툴바(Deploy/메뉴) 숨김 — 우리 상단 바와 중복되는 흰 띠 제거 --- */
         [data-testid="stHeader"] { display: none; }
 
-        /* --- 사이드바: Streamlit 기본값(하단 96px 여백 등)을 걷어내 더 조밀하게.
-           좌우 padding을 여기서 직접 20px로 고정해, 아래 .step/.sidebar-logo/.top-bar 의
-           음수 마진(가장자리까지 붙이는 값)이 항상 정확히 맞도록 보장한다
-           (Streamlit 기본값에 의존하면 버전/렌더링에 따라 어긋날 수 있음). --- */
+        /* --- 사이드바: 좌우 padding을 직접 작은 값으로 고정해 왼쪽 여백을 줄인다.
+           (이전에는 Streamlit 기본 padding을 음수 마진으로 "상쇄"하는 방식이었는데,
+           그 기본값이 환경마다 달라 보더가 안 보이거나 여백이 크게 남는 문제가 있었다.
+           이제 모든 사이드바 요소가 padding만으로 일관되게 정렬된다.) --- */
         [data-testid="stSidebarContent"] {
             padding-top: 0.75rem;
-            padding-left: 20px !important;
-            padding-right: 20px !important;
+            padding-left: 10px !important;
+            padding-right: 10px !important;
         }
         [data-testid="stSidebarHeader"] { height: 30px !important; min-height: 30px !important; }
         [data-testid="stSidebarUserContent"] { padding-bottom: 12px !important; }
@@ -143,12 +145,12 @@ def inject_css() -> None:
         [data-testid="stSidebar"][aria-expanded="false"] { min-width: 0 !important; width: 0 !important; }
         /* --- 섹션 헤더: 하단 보더로 구획을 명확히 구분 --- */
         .section-header { font-size: 1rem; font-weight: 700; color: var(--ink);
-            margin: 32px 0 12px 0; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+            margin: 22px 0 10px 0; padding-bottom: 7px; border-bottom: 1px solid var(--line); }
         .section-header.first { margin-top: 4px; }
 
         /* --- 카드: 좌측 accent 보더로 강조. Apple 시스템처럼 그림자 없이 보더만으로 구분 --- */
         .pick-card { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent);
-            border-radius: var(--radius-card); padding: 24px; }
+            border-radius: var(--radius-card); padding: 18px 20px; }
         .pick-card .title { font-size: 1.1rem; font-weight: 700; color: var(--ink); margin-top: 10px; }
         .pick-card .score-badge { display: inline-block; background: var(--accent); color: #ffffff;
             font-weight: 700; padding: 5px 14px; border-radius: var(--radius-badge); font-size: 0.88rem;
@@ -168,7 +170,7 @@ def inject_css() -> None:
             font-size: 0.82em; background: none; padding: 0; }
 
         /* --- 레코드 헤더: 라벨/값 필드 그리드 (ERP 상세화면 정보 블록 스타일) --- */
-        .field-row { display: flex; gap: 32px; flex-wrap: wrap; margin-top: 16px; }
+        .field-row { display: flex; gap: 28px; flex-wrap: wrap; margin-top: 12px; }
         .field-row .field { display: flex; flex-direction: column; gap: 4px; }
         .field-row .field-label { font-size: 0.68rem; font-weight: 700; color: var(--ink-tertiary);
             text-transform: uppercase; letter-spacing: .07em; }
@@ -178,9 +180,9 @@ def inject_css() -> None:
         /* --- 데이터 테이블: 업무 시스템 그리드 스타일 (헤더 행 + 줄무늬 행) --- */
         .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         .data-table th { text-align: left; font-size: 0.7rem; font-weight: 700; color: var(--ink-tertiary);
-            text-transform: uppercase; letter-spacing: .06em; padding: 9px 12px;
+            text-transform: uppercase; letter-spacing: .06em; padding: 7px 12px;
             border-bottom: 1px solid var(--line); background: var(--surface-muted); }
-        .data-table td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--ink); }
+        .data-table td { padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--ink); }
         .data-table tbody tr:last-child td { border-bottom: none; }
         .data-table tbody tr:nth-child(even) { background: var(--surface-muted); }
         .data-table td.num { text-align: right; font-weight: 700; color: var(--accent); white-space: nowrap;
@@ -191,9 +193,7 @@ def inject_css() -> None:
         /* --- 사이드바 진행 스테퍼: 업무 시스템 좌측 메뉴처럼 STEP 번호 + 라벨,
            원형 도트 대신 좌측 보더로 현재 위치를 표시 --- */
         .stepper { margin: 4px 0 20px 0; }
-        /* 좌측 보더를 사이드바 실제 가장자리까지 붙이기 위해 sidebar 좌측 padding(20px)만큼
-           음수 마진으로 빼고, 텍스트는 padding으로 다시 안쪽에 배치한다. */
-        .step { padding: 7px 0 7px 13px; margin: 0 0 1px -14px; border-left: 3px solid transparent; }
+        .step { padding: 7px 0 7px 10px; margin: 0 0 1px 0; border-left: 3px solid transparent; }
         .step-eyebrow { font-size: 0.66rem; font-weight: 700; color: var(--ink-tertiary);
             letter-spacing: .07em; margin-bottom: 2px; }
         .step-label { font-size: 0.86rem; color: var(--ink-tertiary); }
@@ -220,10 +220,12 @@ def inject_css() -> None:
             border-color: var(--line); color: var(--ink);
         }
 
-        /* --- st.container(border=True): Streamlit 기본 보더 색/라운드만 정리 --- */
+        /* --- st.container(border=True): Streamlit 기본 보더 색/라운드 정리.
+           기본 요소 간 gap(16px)도 줄여서 화면 전체 스크롤 길이를 줄인다. --- */
         div[data-testid="stVerticalBlock"] {
             border-radius: var(--radius-card);
             border-color: var(--line);
+            gap: 10px;
         }
 
         /* --- Expander (보조/검증 정보) --- */
@@ -232,6 +234,9 @@ def inject_css() -> None:
 
         /* --- 코드 블록 --- */
         div[data-testid="stCodeBlock"] { border-radius: var(--radius-control); }
+
+        /* --- 구분선(st.markdown("---")): 기본 32px 여백은 과해서 축소 --- */
+        hr { margin: 14px 0 !important; }
         </style>
         """,
         unsafe_allow_html=True,
