@@ -8,7 +8,7 @@ import streamlit as st
 import src.config as cfg
 from src import demo_state
 from src.data_loader import DataLoader
-from ui.common import nfc, page_header, render_evidence, section_header
+from ui.common import nfc, page_header, render_data_table, render_evidence, section_header
 
 
 def _format_months(m: int | None) -> str:
@@ -40,34 +40,37 @@ def render(loader: DataLoader) -> None:
         [dict(r) for r in _safety_rules(loader)],
     )
 
-    # --- 1-Pick 카드 ---
+    # --- 1-Pick 카드: 레코드 상세 화면처럼 라벨/값 필드로 정리 ---
     section_header("오늘의 1-Pick 고객", first=True)
+    field_cells = "".join(
+        f'<div class="field"><span class="field-label">{label}</span>'
+        f'<span class="field-value">{value}</span></div>'
+        for label, value in [
+            ("담당 FC 변경", _format_months(loader.months_elapsed(cust.fc_changed_at)) + " 경과"),
+            ("최근 접촉", _format_months(loader.months_elapsed(cust.last_contacted_at)) + " 전"),
+            ("특약 갱신", f"D-{loader.days_until(_renewal_date(loader, cust_id))}"),
+        ]
+    )
     st.markdown(
         f"""
         <div class="pick-card">
           <span class="score-badge">Rescue Score {pick_score.total}점</span>
           <div class="title">{nfc(cust.name)} 고객님 ({cust_id})</div>
-          <div style="margin-top:6px">담당 FC 변경 후 <b>{_format_months(loader.months_elapsed(cust.fc_changed_at))}</b> ·
-             최근 접촉 <b>{_format_months(loader.months_elapsed(cust.last_contacted_at))}</b> 전 ·
-             특약 갱신 <b>D-{loader.days_until(_renewal_date(loader, cust_id))}</b></div>
+          <div class="field-row">{field_cells}</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    # --- 점수 세부 항목: 쉬운 말 우선 표시, 상세 산출식은 보조 텍스트로 ---
+    # --- 점수 세부 항목: 업무 시스템 데이터 그리드 스타일 테이블로 표시 ---
     section_header("점수 세부 항목")
     with st.container(border=True):
-        for item in pick_score.items:
-            if item.points > 0:
-                st.markdown(
-                    f'<div style="margin-bottom:12px;">'
-                    f'<div style="font-size:0.95rem;">{nfc(item.name_kr)} · '
-                    f'<span style="color:var(--accent);font-weight:700;">+{item.points}점</span></div>'
-                    f'<div style="font-size:0.78rem;color:var(--ink-tertiary);margin-top:2px;">{nfc(item.evidence_text)}</div>'
-                    f"</div>",
-                    unsafe_allow_html=True,
-                )
+        rows = [
+            [item.name_kr, item.evidence_text, f"+{item.points}점"]
+            for item in pick_score.items
+            if item.points > 0
+        ]
+        render_data_table(["평가 항목", "산출 근거", "배점"], rows, num_col=2, mono_col=1)
         st.caption(
             f"합계 {pick_score.total}점 — 연락 가능한 고객 중 이 점수가 가장 높아 오늘의 1-Pick으로 선정되었습니다."
         )

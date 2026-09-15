@@ -56,6 +56,7 @@ def inject_css() -> None:
             --line: #dfe4e9;
             --surface: #ffffff;
             --surface-muted: #f5f7f9;
+            --surface-page: #eef0f3;
             --ok: #146c47;
             --ok-bg: #e5f2ea;
             --warn: #9a5b0a;
@@ -83,7 +84,16 @@ def inject_css() -> None:
             font-weight: 700; font-style: normal; font-display: swap;
         }
 
-        [data-testid="stAppViewContainer"] .block-container { padding-top: 4.5rem; max-width: 1120px; }
+        /* --- 관리자 화면 프레임: 회색 캔버스 위에 흰색 패널이 떠 있는 ERP 레이아웃 --- */
+        [data-testid="stMain"] { background: var(--surface-page); }
+        [data-testid="stAppViewContainer"] .block-container {
+            max-width: 1120px;
+            margin-top: 4.5rem; margin-bottom: 32px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-card);
+            padding: 28px 40px 40px;
+        }
         html, body, [class*="css"] {
             color: var(--ink);
             font-family: "Wooridaum", "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
@@ -92,10 +102,12 @@ def inject_css() -> None:
 
         h1 { font-size: 1.3rem !important; }
 
-        /* --- 상단 로고 배너 (우측 정렬) --- */
-        .logo-banner { display: flex; justify-content: flex-end;
-            padding: 0 0 10px 0; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
-        .logo-banner img { height: 22px; display: block; }
+        /* --- 상단 유틸리티 바: 좌측 breadcrumb(시스템 내 위치) · 우측 로고 --- */
+        .top-bar { display: flex; justify-content: space-between; align-items: center;
+            padding: 0 0 14px 0; margin-bottom: 22px; border-bottom: 1px solid var(--line); }
+        .top-bar .breadcrumb { font-size: 0.78rem; color: var(--ink-tertiary); font-weight: 500; }
+        .top-bar .breadcrumb b { color: var(--ink-secondary); font-weight: 700; }
+        .top-bar img { height: 20px; display: block; }
 
         /* --- 사이드바 --- */
         [data-testid="stSidebarContent"] { padding-top: 0.75rem; }
@@ -137,6 +149,25 @@ def inject_css() -> None:
         .ev-block { background: var(--surface-muted); border-radius: var(--radius-control);
             padding: 10px 14px; margin: 6px 0; font-size: 0.86rem; color: var(--ink); }
 
+        /* --- 레코드 헤더: 라벨/값 필드 그리드 (ERP 상세화면 정보 블록 스타일) --- */
+        .field-row { display: flex; gap: 32px; flex-wrap: wrap; margin-top: 16px; }
+        .field-row .field { display: flex; flex-direction: column; gap: 4px; }
+        .field-row .field-label { font-size: 0.68rem; font-weight: 700; color: var(--ink-tertiary);
+            text-transform: uppercase; letter-spacing: .04em; }
+        .field-row .field-value { font-size: 0.92rem; font-weight: 600; color: var(--ink); }
+
+        /* --- 데이터 테이블: 업무 시스템 그리드 스타일 (헤더 행 + 줄무늬 행) --- */
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .data-table th { text-align: left; font-size: 0.7rem; font-weight: 700; color: var(--ink-tertiary);
+            text-transform: uppercase; letter-spacing: .03em; padding: 9px 12px;
+            border-bottom: 1px solid var(--line); background: var(--surface-muted); }
+        .data-table td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--ink); }
+        .data-table tbody tr:last-child td { border-bottom: none; }
+        .data-table tbody tr:nth-child(even) { background: var(--surface-muted); }
+        .data-table td.num { text-align: right; font-weight: 700; color: var(--accent); white-space: nowrap; }
+        .data-table td.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 0.76rem; color: var(--ink-tertiary); }
+
         /* --- 사이드바 진행 스테퍼 --- */
         .stepper { margin: 4px 0 20px 0; }
         .step { display: flex; align-items: center; gap: 12px; position: relative; padding: 7px 0; }
@@ -154,9 +185,10 @@ def inject_css() -> None:
         .step-current .step-dot { background: var(--accent); border-color: var(--accent); color: #fff; }
         .step-current .step-label { color: var(--ink); font-weight: 700; }
 
-        /* --- 버튼: 단일 accent, 각진 radius --- */
+        /* --- 버튼: 단일 accent, 각진 radius, 툴바에 가까운 높이감 --- */
         div[data-testid="stButton"] button {
             border-radius: var(--radius-control) !important;
+            padding-top: 0.42rem !important; padding-bottom: 0.42rem !important;
         }
         div[data-testid="stButton"] button[kind="primary"],
         div[data-testid="stButton"] button[kind="primaryFormSubmit"] {
@@ -187,19 +219,63 @@ def inject_css() -> None:
     )
 
 
-def render_logo_banner() -> None:
-    """상단 로고 배너 — 사내 시스템 화면임을 나타내는 최소한의 브랜드 마크만 표시."""
+def render_top_bar(module_label: str, app_title: str) -> None:
+    """상단 유틸리티 바 — 좌측에 현재 위치(breadcrumb), 우측에 로고.
+
+    사내 시스템에 로그인해 특정 화면에 들어와 있다는 맥락을 주는 최소한의
+    wayfinding 요소. 과거에 있었던 큰 텍스트 배너와 달리 얇고 절제된 형태다.
+    """
     import base64
     from pathlib import Path
 
     import streamlit as st
 
     logo_path = Path(__file__).parent / "assets" / "dongyang_logo.png"
-    if not logo_path.exists():
-        return
-    b64 = base64.b64encode(logo_path.read_bytes()).decode("ascii")
+    logo_html = ""
+    if logo_path.exists():
+        b64 = base64.b64encode(logo_path.read_bytes()).decode("ascii")
+        logo_html = f'<img src="data:image/png;base64,{b64}" alt="동양생명" />'
+
     st.markdown(
-        f'<div class="logo-banner"><img src="data:image/png;base64,{b64}" alt="동양생명" /></div>',
+        f'<div class="top-bar">'
+        f'<span class="breadcrumb">{nfc(app_title)} <b>·</b> {nfc(module_label)}</span>'
+        f"{logo_html}"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
+
+
+def render_field_row(fields: list[tuple[str, str]]) -> None:
+    """라벨/값 필드를 가로로 나열 — 레코드 상세 화면의 정보 블록 스타일."""
+    import streamlit as st
+
+    cells = "".join(
+        f'<div class="field"><span class="field-label">{nfc(label)}</span>'
+        f'<span class="field-value">{nfc(value)}</span></div>'
+        for label, value in fields
+    )
+    st.markdown(f'<div class="field-row">{cells}</div>', unsafe_allow_html=True)
+
+
+def render_data_table(headers: list[str], rows: list[list[str]], num_col: int | None = None, mono_col: int | None = None) -> None:
+    """헤더 행 + 줄무늬 행을 가진 데이터 테이블 렌더링 (업무 시스템 그리드 스타일)."""
+    import streamlit as st
+
+    thead = "".join(f"<th>{nfc(h)}</th>" for h in headers)
+    body_rows = []
+    for row in rows:
+        cells = []
+        for i, val in enumerate(row):
+            cls = ""
+            if num_col is not None and i == num_col:
+                cls = ' class="num"'
+            elif mono_col is not None and i == mono_col:
+                cls = ' class="mono"'
+            cells.append(f"<td{cls}>{nfc(str(val))}</td>")
+        body_rows.append(f"<tr>{''.join(cells)}</tr>")
+    st.markdown(
+        f'<table class="data-table"><thead><tr>{thead}</tr></thead>'
+        f'<tbody>{"".join(body_rows)}</tbody></table>',
         unsafe_allow_html=True,
     )
 

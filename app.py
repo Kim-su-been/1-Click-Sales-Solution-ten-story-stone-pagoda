@@ -11,13 +11,12 @@ import streamlit as st
 import src.config as cfg
 import src.demo_state as demo_state
 from src.data_loader import DataLoadingError, get_loader
-from ui.common import inject_css, render_logo_banner, render_stepper
+from ui.common import inject_css, render_stepper, render_top_bar
 
 
 def main() -> None:
     st.set_page_config(page_title=cfg.APP_TITLE, layout="wide")
     inject_css()
-    render_logo_banner()
 
     try:
         loader = get_loader()
@@ -32,6 +31,8 @@ def main() -> None:
         cfg.SCREEN_CONSULTATION: "상담 진행",
         cfg.SCREEN_CLOSING: "상담 완료",
     }
+    render_top_bar(steps.get(screen, ""), cfg.APP_TITLE)
+
     with st.sidebar:
         st.markdown('<div class="sidebar-eyebrow">진행 단계</div>', unsafe_allow_html=True)
         render_stepper(steps, screen)
