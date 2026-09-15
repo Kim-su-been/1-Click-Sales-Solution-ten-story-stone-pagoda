@@ -6,10 +6,17 @@ import unicodedata
 
 import streamlit as st
 
-import src.config as cfg
 from src import demo_state
 from src.data_loader import DataLoader
-from ui.common import humanize, nfc, page_header, render_evidence, section_header
+from ui.common import (
+    fmt_dt,
+    humanize,
+    nfc,
+    render_data_table,
+    render_evidence,
+    render_item_evidence,
+    section_header,
+)
 
 
 def _transcript_snippet(loader: DataLoader, evidenceRef: str) -> str:
@@ -22,8 +29,6 @@ def _transcript_snippet(loader: DataLoader, evidenceRef: str) -> str:
 
 
 def render(loader: DataLoader) -> None:
-    page_header("상담 완료", "STEP 3 / 3 · 분석 및 마무리")
-
     # Runtime Conversation Analysis 결과로 교체 (Expected 미사용)
     from src.agents.orchestrator import run_demo_pipeline
 
@@ -34,33 +39,25 @@ def render(loader: DataLoader) -> None:
     calendar = rt.output.next_action_result["calendar_candidate"]
     cust_id = rt.output.daily_pick["customer_id"]
 
-    st.markdown(
-        f'<div class="notice">{nfc(cfg.NOTICE_TEXT)}</div>',
-        unsafe_allow_html=True,
-    )
-
     # 상담 요약
     section_header("상담 요약", first=True)
     with st.container(border=True):
         st.write(nfc(analysis.get("ai_summary", "")))
         st.caption(f"총 {len(loader.transcript)}개 발화를 분석한 결과입니다.")
 
-    # 고객 반응·관심·걱정·거절
+    # 고객 반응·관심·걱정·거절 — 항목 텍스트를 펼치기 제목으로 써서 항목당 한 줄로 압축
     section_header("고객의 관심사항과 반응")
     st.markdown("**기존 보장내용 확인 요청**")
     for need in analysis["customer_needs"]:
-        st.markdown(f"- {humanize(need['need'])}")
-        render_evidence(need["evidence"], label="근거", key_prefix=f"need_{need['need'][:8]}")
+        render_item_evidence(humanize(need["need"]), need["evidence"], key_prefix=f"need_{need['need'][:8]}")
 
     st.markdown("**보험료 및 갱신 걱정**")
     for c in analysis["concerns"]:
-        st.markdown(f"- {humanize(c['concern'])}")
-        render_evidence(c["evidence"], label="근거", key_prefix=f"concern_{c['concern'][:8]}")
+        render_item_evidence(humanize(c["concern"]), c["evidence"], key_prefix=f"concern_{c['concern'][:8]}")
 
     st.markdown("**추가 가입 의향 / 무관심**")
     for item in analysis["rejection_or_disinterest"]:
-        st.markdown(f"- {humanize(item['item'])}")
-        render_evidence(item["evidence"], label="근거", key_prefix=f"rej_{item['item'][:8]}")
+        render_item_evidence(humanize(item["item"]), item["evidence"], key_prefix=f"rej_{item['item'][:8]}")
 
     # 상담 결과
     section_header("고객 반응과 상담 결과")
@@ -68,7 +65,7 @@ def render(loader: DataLoader) -> None:
     st.markdown(
         f'<span class="badge badge-ok">{humanize(outcome["value"])}</span> '
         f'후속 상담 필요: <b>{"예" if analysis["followup_requested"]["needed"] else "아니오"}</b> · '
-        f'희망 일시 <b>{analysis["followup_requested"].get("preferred_datetime", "")}</b>',
+        f'희망 일시 <b>{fmt_dt(analysis["followup_requested"].get("preferred_datetime", ""))}</b>',
         unsafe_allow_html=True,
     )
     render_evidence(outcome["evidence"], label="결과 근거", key_prefix="outcome")
@@ -84,20 +81,25 @@ def render(loader: DataLoader) -> None:
     st.caption(nfc(crm.get("note", "")))
 
     rec = crm["crm_record"]
-    st.markdown(
-        f"""
-        - **상담 유형**: {nfc(rec.get('consultation_type',''))} · **일시**: {rec.get('consultation_datetime')}
-        - **결과**: {humanize(rec.get('outcome',''))}
-        - **고객 니즈**: {', '.join(humanize(x) for x in rec.get('customer_needs', []))}
-        - **관심사**: {', '.join(nfc(x) for x in rec.get('customer_interests', []))}
-        - **걱정**: {', '.join(humanize(x) for x in rec.get('concerns', []))}
-        - **무관심**: {', '.join(humanize(x) for x in rec.get('disinterest_items', []))}
-        - **후속 필요**: {'예' if rec.get('followup_needed') else '아니오'} ·
-          **희망 일시**: {rec.get('preferred_datetime')}
-        """
-    )
-    st.markdown("**통화 근거 확인**")
-    render_evidence(crm["each_field_evidence"], label="CRM 필드별 근거", key_prefix="crm")
+    with st.container(border=True):
+        render_data_table(
+            ["항목", "내용"],
+            [
+                ["<b>상담 유형</b>", nfc(rec.get("consultation_type", "")) or "-"],
+                ["<b>상담 일시</b>", fmt_dt(rec.get("consultation_datetime")) or "-"],
+                ["<b>결과</b>", humanize(rec.get("outcome", ""))],
+                ["<b>고객 니즈</b>", ", ".join(humanize(x) for x in rec.get("customer_needs", [])) or "-"],
+                ["<b>관심사</b>", ", ".join(nfc(x) for x in rec.get("customer_interests", [])) or "-"],
+                ["<b>걱정</b>", ", ".join(humanize(x) for x in rec.get("concerns", [])) or "-"],
+                ["<b>무관심</b>", ", ".join(humanize(x) for x in rec.get("disinterest_items", [])) or "-"],
+                [
+                    "<b>후속 필요</b>",
+                    ("예 · 희망 일시 " + fmt_dt(rec.get("preferred_datetime")))
+                    if rec.get("followup_needed") else "아니오",
+                ],
+            ],
+        )
+    render_evidence(crm["each_field_evidence"], label="통화 근거 확인", key_prefix="crm")
 
     # FC 확인 + 저장
     section_header("FC 확인 및 저장")
@@ -127,6 +129,7 @@ def render(loader: DataLoader) -> None:
         draft_text = st.text_area(
             "CRM 메모 수정 (선택)",
             value=demo_state.get_fc_draft_text() or nfc(crm.get("note", "")),
+            height=180,
             key="fc_draft_edit",
         )
         if st.button("FC 확인 및 저장", type="primary", use_container_width=True):
@@ -162,21 +165,24 @@ def render(loader: DataLoader) -> None:
     for act in next_actions:
         st.markdown(
             f"- **{nfc(act['title'])}** — "
-            f"예정일 {act.get('due_datetime')} · 상태: {humanize(act.get('status',''))}"
+            f"예정일 {fmt_dt(act.get('due_datetime'))} · 상태: {humanize(act.get('status',''))}"
         )
     st.markdown("**재상담 일정 후보**")
     st.markdown(
-        f"- {nfc(calendar.get('title',''))} — {calendar.get('due_datetime')} "
+        f"- {nfc(calendar.get('title',''))} — {fmt_dt(calendar.get('due_datetime'))} "
         f"({calendar.get('duration_minutes')}분) · 상태: {humanize(calendar.get('status',''))}"
     )
     render_evidence(calendar.get("evidence"), label="캘린더 근거", key_prefix="cal")
 
-    # 처음으로 / Demo 초기화
+    # 처음으로 / Demo 초기화 — 두 번째 동작은 QA/데모 초기화 용도라 덜 눈에 띄게 나란히 배치
     st.markdown("---")
-    if st.button("처음으로 돌아가기", use_container_width=True):
-        demo_state.reset_to_daily_pick()
-        st.rerun()
-    if st.button("처음부터 다시 시작", use_container_width=True):
-        demo_state.reset_demo(all_data=True)
-        st.rerun()
+    col_reset1, col_reset2 = st.columns(2)
+    with col_reset1:
+        if st.button("처음으로 돌아가기", use_container_width=True):
+            demo_state.reset_to_daily_pick()
+            st.rerun()
+    with col_reset2:
+        if st.button("처음부터 다시 시작", use_container_width=True):
+            demo_state.reset_demo(all_data=True)
+            st.rerun()
     st.caption("초기화하면 현재 세션의 실행 기록만 삭제됩니다. 고객 데이터와 지식 문서는 유지됩니다.")

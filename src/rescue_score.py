@@ -63,7 +63,7 @@ def compute_score(
             if pts:
                 items.append(ScoreBreakdownItem(
                     "R1a", _rule_name_kr(score_rules, "R1a"), pts,
-                    f"fc_changed_at={customer.fc_changed_at} 기준 {fc_months}개월 경과(3개월 이내)",
+                    f"담당 FC가 {customer.fc_changed_at}에 변경되어 {fc_months}개월 지남 (3개월 이내)",
                 ))
                 total += pts
         elif fc_months <= 12:
@@ -71,7 +71,7 @@ def compute_score(
             if pts:
                 items.append(ScoreBreakdownItem(
                     "R1b", _rule_name_kr(score_rules, "R1b"), pts,
-                    f"fc_changed_at={customer.fc_changed_at} 기준 {fc_months}개월 경과(3개월 초과~12개월 이내)",
+                    f"담당 FC가 {customer.fc_changed_at}에 변경되어 {fc_months}개월 지남 (3개월 초과 12개월 이내)",
                 ))
                 total += pts
 
@@ -82,7 +82,7 @@ def compute_score(
         if pts:
             items.append(ScoreBreakdownItem(
                 "R2", _rule_name_kr(score_rules, "R2"), pts,
-                f"last_contacted_at={customer.last_contacted_at} 기준 {contact_months}개월 경과(12개월 이상)",
+                f"마지막 접촉일 {customer.last_contacted_at} 이후 {contact_months}개월 지남 (12개월 이상)",
             ))
             total += pts
 
@@ -95,7 +95,8 @@ def compute_score(
             if pts:
                 items.append(ScoreBreakdownItem(
                     "R3a", _rule_name_kr(score_rules, "R3a"), pts,
-                    f"renewal_date={min(renewal_dates, key=lambda d: days_until(as_of, d))}, D-{d_min}(45일 이내)",
+                    f"특약 갱신 예정일 {min(renewal_dates, key=lambda d: days_until(as_of, d))}까지 "
+                    f"{d_min}일 남음 (45일 이내)",
                 ))
                 total += pts
         elif d_min is not None and d_min <= 60:
@@ -103,7 +104,8 @@ def compute_score(
             if pts:
                 items.append(ScoreBreakdownItem(
                     "R3b", _rule_name_kr(score_rules, "R3b"), pts,
-                    f"renewal_date={min(renewal_dates, key=lambda d: days_until(as_of, d))}, D-{d_min}(46~60일)",
+                    f"특약 갱신 예정일 {min(renewal_dates, key=lambda d: days_until(as_of, d))}까지 "
+                    f"{d_min}일 남음 (46~60일)",
                 ))
                 total += pts
 
@@ -114,10 +116,15 @@ def compute_score(
     ):
         pts = _rule_condition(score_rules, "R4")
         if pts:
-            lc = customer.last_consultation_at if customer.last_consultation_at else "null"
+            if customer.last_consultation_at is None:
+                ev_text = "최근 상담 이력이 없음 (6개월 기준 충족)"
+            else:
+                ev_text = (
+                    f"마지막 상담일 {customer.last_consultation_at} 이후 "
+                    f"{consultation_months}개월 지남 (6개월 이상)"
+                )
             items.append(ScoreBreakdownItem(
-                "R4", _rule_name_kr(score_rules, "R4"), pts,
-                f"last_consultation_at={lc}(최근 6개월 내 상담 이력 없음)",
+                "R4", _rule_name_kr(score_rules, "R4"), pts, ev_text,
             ))
             total += pts
 
@@ -127,7 +134,7 @@ def compute_score(
         if pts:
             items.append(ScoreBreakdownItem(
                 "R5", _rule_name_kr(score_rules, "R5"), pts,
-                "해당 고객 계약 중 premium_status==OVERDUE 인 계약 1건 이상",
+                "보험료가 연체 중인 계약이 1건 이상 있음",
             ))
             total += pts
 

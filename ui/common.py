@@ -24,6 +24,9 @@ STATUS_LABELS: dict[str, str] = {
     "PENDING_FC_CONFIRM": "FC 확인 대기",
     "COMPLIANT": "규정 준수 확인",
     "REJECTED": "반려",
+    "CALL": "전화",
+    "SMS": "문자",
+    "KAKAO": "카카오톡",
 }
 
 
@@ -39,6 +42,18 @@ def humanize(text: str) -> str:
     return t.replace("_", " ")
 
 
+def fmt_dt(value: str | None) -> str:
+    """ISO 8601 일시(YYYY-MM-DDTHH:MM:SS) → 화면 표시용(YYYY-MM-DD HH:MM).
+    'T' 구분자와 초 단위를 없애 raw 타임스탬프처럼 보이지 않게 한다."""
+    if not value:
+        return ""
+    v = nfc(str(value))
+    if "T" in v:
+        date_part, _, time_part = v.partition("T")
+        return f"{date_part} {time_part[:5]}"
+    return v
+
+
 def inject_css() -> None:
     """관리자 화면 톤의 CSS — 단일 accent·넓은 여백·부드러운 카드 elevation."""
     import streamlit as st
@@ -47,108 +62,177 @@ def inject_css() -> None:
         """
         <style>
         :root {
-            --accent: #3182f6;
-            --accent-weak: #eaf2fe;
-            --ink: #191f28;
-            --ink-secondary: #6b7684;
-            --ink-tertiary: #8b95a1;
-            --line: #f2f4f6;
+            --accent: #1792cd;
+            --accent-strong: #12719f;
+            --accent-weak: #e8f4fb;
+            --ink: #16212e;
+            --ink-secondary: #5b6b7c;
+            --ink-tertiary: #85919d;
+            --line: #dfe4e9;
             --surface: #ffffff;
-            --surface-muted: #f9fafb;
-            --ok: #12805c;
-            --ok-bg: #e3f6ec;
-            --warn: #b25e09;
-            --warn-bg: #fdf1df;
-            --radius-card: 16px;
-            --radius-control: 12px;
+            --surface-muted: #f5f7f9;
+            --surface-page: #eef0f3;
+            --ok: #146c47;
+            --ok-bg: #e5f2ea;
+            --warn: #9a5b0a;
+            --warn-bg: #faf0dd;
+            --radius-card: 4px;
+            --radius-control: 4px;
+            --radius-badge: 2px;
             --radius-pill: 999px;
-            --shadow-card: 0 1px 2px rgba(15,23,42,0.04), 0 6px 20px rgba(15,23,42,0.06);
         }
 
-        [data-testid="stAppViewContainer"] .block-container { padding-top: 4rem; max-width: 1120px; }
-        html, body, [class*="css"] { color: var(--ink); }
+        /* Pretendard — 국내 금융/기업 서비스에서 널리 쓰이는 고딕 서체. 로드 실패 시 시스템 고딕 폰트로 대체 */
+        @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css");
+
+        /* --- 관리자 화면 프레임: 회색 캔버스 위에 흰색 패널이 떠 있는 ERP 레이아웃 --- */
+        [data-testid="stMain"] { background: var(--surface-page); }
+        [data-testid="stAppViewContainer"] .block-container {
+            max-width: 1120px;
+            margin-top: 1.75rem; margin-bottom: 32px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-card);
+            padding: 22px 32px 32px;
+        }
+        html, body, [class*="css"] {
+            color: var(--ink);
+            font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+                "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", sans-serif;
+        }
 
         h1 { font-size: 1.3rem !important; }
 
-        /* --- 상단 로고 배너 (우측 정렬) --- */
-        .logo-banner { display: flex; justify-content: flex-end;
-            padding: 2px 0 16px 0; margin-bottom: 12px; border-bottom: 1px solid var(--line); }
-        .logo-banner img { height: 26px; display: block; }
+        /* --- 상단 유틸리티 바: 좌측 breadcrumb(시스템 내 위치) · 우측 사용자 정보 --- */
+        .top-bar { display: flex; justify-content: space-between; align-items: center;
+            padding: 0 0 10px 0; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
+        .top-bar .breadcrumb { font-size: 1.05rem; color: var(--ink); font-weight: 700; letter-spacing: -.01em; }
 
-        /* --- 사이드바 --- */
-        [data-testid="stSidebarContent"] { padding-top: 1.75rem; }
-        .sidebar-eyebrow { font-size: 0.74rem; font-weight: 700; letter-spacing: .05em;
-            color: var(--ink-tertiary); text-transform: uppercase; margin: 0 0 10px 1px; }
+        /* --- 사용자 정보 칩 (상단바 우측) --- */
+        .user-chip { display: flex; align-items: center; gap: 10px; }
+        .user-chip .avatar { width: 30px; height: 30px; border-radius: 50%; flex: 0 0 auto;
+            background: var(--accent); color: #ffffff; font-size: 0.72rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; }
+        .user-chip .info { display: flex; flex-direction: column; line-height: 1.3; }
+        .user-chip .info .name { font-size: 0.82rem; font-weight: 700; color: var(--ink);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+        .user-chip .info .role { font-size: 0.72rem; color: var(--ink-tertiary); }
 
-        /* --- 페이지 헤더 --- */
-        .page-eyebrow { font-size: 0.78rem; font-weight: 600; color: var(--accent);
-            margin: 0 0 6px 1px; }
-        .page-title { font-size: 1.7rem; font-weight: 800; color: var(--ink); letter-spacing: -.01em;
-            margin: 0 0 28px 0; }
+        /* --- 사이드바 로고: 좌측 정렬, 최대한 위쪽으로. --- */
+        .sidebar-logo { display: flex; justify-content: flex-start; align-items: center;
+            padding: 0; margin-top: -12px; margin-bottom: 22px; }
+        .sidebar-logo img { height: 24px; display: block; }
 
-        /* --- 섹션 헤더: 라인/아이콘 없이 타이포 위계만으로 구분 --- */
-        .section-header { font-size: 1.02rem; font-weight: 700; color: var(--ink);
-            margin: 32px 0 12px 0; }
+        /* --- Streamlit 기본 헤더 툴바(Deploy/메뉴) 숨김 — 우리 상단 바와 중복되는 흰 띠 제거 --- */
+        [data-testid="stHeader"] { display: none; }
+
+        /* --- 사이드바: 좌우 padding을 직접 작은 값으로 고정해 왼쪽 여백을 줄인다.
+           선택자를 반복해 specificity를 인위적으로 높인다 — Streamlit이 내부적으로
+           클래스 2개 이상을 묶은 선택자(.st-emotion-cache-xxx.yyy)로 padding을 주는
+           경우, 단순 속성 선택자 1개(!important 포함)로는 specificity가 밀려
+           덮어쓰지 못하는 환경이 있었다(사용자 환경에서 왼쪽 여백이 그대로 남는 문제로 확인). */
+        [data-testid="stSidebarContent"][data-testid="stSidebarContent"][data-testid="stSidebarContent"] {
+            padding-top: 0.75rem !important;
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+        }
+        [data-testid="stSidebarHeader"][data-testid="stSidebarHeader"][data-testid="stSidebarHeader"] {
+            height: 22px !important; min-height: 22px !important;
+        }
+        [data-testid="stSidebarUserContent"][data-testid="stSidebarUserContent"][data-testid="stSidebarUserContent"] {
+            padding-bottom: 12px !important; padding-left: 0 !important; padding-right: 0 !important;
+        }
+        /* 펼쳐진 상태에서만 폭을 좁히고, 접힌 상태(aria-expanded="false")는 강제하지 않는다.
+           그래야 사이드바를 접었을 때 본문이 그만큼 다시 채워진다. */
+        [data-testid="stSidebar"][aria-expanded="true"][aria-expanded="true"] { min-width: 230px !important; width: 230px !important; }
+        [data-testid="stSidebar"][aria-expanded="true"][aria-expanded="true"] > div { width: 230px !important; }
+        [data-testid="stSidebar"][aria-expanded="false"][aria-expanded="false"] { min-width: 0 !important; width: 0 !important; }
+        /* --- 섹션 헤더: 좌측 accent bar + 텍스트 (트레일링 선은 제거) --- */
+        .section-header { display: flex; align-items: center; gap: 10px;
+            font-size: 1rem; font-weight: 700; color: var(--ink); margin: 22px 0 10px 0; }
+        .section-header .bar { width: 3px; height: 15px; background: var(--accent);
+            border-radius: 2px; flex: 0 0 auto; }
+        .section-header .label { white-space: nowrap; }
         .section-header.first { margin-top: 4px; }
 
-        /* --- 카드 --- */
-        .pick-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card);
-            box-shadow: var(--shadow-card); padding: 22px 24px; }
-        .pick-card .title { font-size: 1.15rem; font-weight: 700; color: var(--ink); margin-top: 10px; }
+        /* --- 카드: 좌측 accent 보더로 강조. Apple 시스템처럼 그림자 없이 보더만으로 구분 --- */
+        .pick-card { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+            border-radius: var(--radius-card); padding: 18px 20px; }
+        .pick-card .title { font-size: 1.1rem; font-weight: 700; color: var(--ink); margin-top: 10px; }
         .pick-card .score-badge { display: inline-block; background: var(--accent); color: #ffffff;
-            font-weight: 700; padding: 6px 16px; border-radius: var(--radius-pill); font-size: 0.9rem; }
+            font-weight: 700; padding: 5px 14px; border-radius: var(--radius-badge); font-size: 0.88rem;
+            letter-spacing: .01em; font-variant-numeric: tabular-nums; }
 
-        /* --- 상태 태그 (배지): pill, 보더 없이 소프트 컬러 --- */
-        .badge { display: inline-block; padding: 4px 12px; border-radius: var(--radius-pill);
-            font-size: 0.76rem; font-weight: 600; }
+        /* --- 상태 태그 (배지): 각진 라벨 형태, 소프트 컬러 --- */
+        .badge { display: inline-block; padding: 3px 10px; border-radius: var(--radius-badge);
+            font-size: 0.75rem; font-weight: 600; }
         .badge-ok { background: var(--ok-bg); color: var(--ok); }
         .badge-warn { background: var(--warn-bg); color: var(--warn); }
         .badge-info { background: var(--accent-weak); color: var(--accent); }
 
-        /* --- 고지/안내 문구 --- */
-        .notice { background: var(--surface-muted); border-radius: var(--radius-control);
-            padding: 12px 16px; font-size: 0.82rem; color: var(--ink-secondary); }
-
-        /* --- 근거 블록 --- */
+        /* --- 근거 블록: 근거 코드(evidenceRef)는 기술적 식별자이므로 모노스페이스로 구분 --- */
         .ev-block { background: var(--surface-muted); border-radius: var(--radius-control);
             padding: 10px 14px; margin: 6px 0; font-size: 0.86rem; color: var(--ink); }
+        .ev-block code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 0.82em; background: none; padding: 0; }
 
-        /* --- 사이드바 진행 스테퍼 --- */
+        /* --- 레코드 헤더: 라벨/값 필드 그리드 (ERP 상세화면 정보 블록 스타일) --- */
+        .field-row { display: flex; gap: 28px; flex-wrap: wrap; margin-top: 12px; }
+        .field-row .field { display: flex; flex-direction: column; gap: 4px; }
+        .field-row .field-label { font-size: 0.68rem; font-weight: 700; color: var(--ink-tertiary);
+            text-transform: uppercase; letter-spacing: .07em; }
+        .field-row .field-value { font-size: 0.92rem; font-weight: 600; color: var(--ink);
+            font-variant-numeric: tabular-nums; }
+
+        /* --- 데이터 테이블: 업무 시스템 그리드 스타일 (헤더 행 + 줄무늬 행) --- */
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .data-table th { text-align: left; font-size: 0.7rem; font-weight: 700; color: var(--ink-tertiary);
+            text-transform: uppercase; letter-spacing: .06em; padding: 7px 12px;
+            border-bottom: 1px solid var(--line); background: var(--surface-muted); }
+        .data-table td { padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--ink); }
+        .data-table tbody tr:last-child td { border-bottom: none; }
+        .data-table tbody tr:nth-child(even) { background: var(--surface-muted); }
+        .data-table td.num { text-align: right; font-weight: 700; color: var(--accent); white-space: nowrap;
+            font-variant-numeric: tabular-nums; }
+        .data-table td.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 0.76rem; color: var(--ink-tertiary); }
+
+        /* --- 사이드바 진행 스테퍼: 업무 시스템 좌측 메뉴처럼 STEP 번호 + 라벨,
+           원형 도트 대신 좌측 보더로 현재 위치를 표시 --- */
         .stepper { margin: 4px 0 20px 0; }
-        .step { display: flex; align-items: center; gap: 12px; position: relative; padding: 7px 0; }
-        .step:not(:last-child)::after {
-            content: ""; position: absolute; left: 13px; top: 32px; width: 2px; height: 18px;
-            background: var(--line);
-        }
-        .step-dot { flex: 0 0 auto; width: 26px; height: 26px; border-radius: var(--radius-pill);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.72rem; font-weight: 700; background: var(--surface); color: var(--ink-tertiary);
-            border: 1.5px solid var(--line); }
+        .step { padding: 7px 0 7px 10px; margin: 0 0 1px 0; border-left: 3px solid transparent; }
+        .step-eyebrow { font-size: 0.66rem; font-weight: 700; color: var(--ink-tertiary);
+            letter-spacing: .07em; margin-bottom: 2px; }
         .step-label { font-size: 0.86rem; color: var(--ink-tertiary); }
-        .step-done .step-dot { background: var(--ok-bg); border-color: var(--ok-bg); color: var(--ok); }
+        .step-done .step-eyebrow { color: var(--ok); }
         .step-done .step-label { color: var(--ink-secondary); }
-        .step-current .step-dot { background: var(--accent); border-color: var(--accent); color: #fff; }
+        /* 현재 단계에서만 좌측 컬러 보더를 표시한다 (완료/예정 단계는 보더 없음) */
+        .step-current { border-left-color: var(--accent); }
+        .step-current .step-eyebrow { color: var(--accent); }
         .step-current .step-label { color: var(--ink); font-weight: 700; }
 
-        /* --- 버튼: 단일 accent, 넉넉한 radius --- */
+        /* --- 버튼: 단일 accent, 각진 radius, 툴바에 가까운 높이감 --- */
         div[data-testid="stButton"] button {
             border-radius: var(--radius-control) !important;
+            padding-top: 0.42rem !important; padding-bottom: 0.42rem !important;
         }
         div[data-testid="stButton"] button[kind="primary"],
         div[data-testid="stButton"] button[kind="primaryFormSubmit"] {
             background-color: var(--accent); border-color: var(--accent);
         }
         div[data-testid="stButton"] button[kind="primary"]:hover {
-            background-color: #1b64da; border-color: #1b64da;
+            background-color: var(--accent-strong); border-color: var(--accent-strong);
         }
         div[data-testid="stButton"] button[kind="secondary"] {
             border-color: var(--line); color: var(--ink);
         }
 
-        /* --- st.container(border=True): Streamlit 기본 보더 색/라운드만 정리 --- */
+        /* --- st.container(border=True): Streamlit 기본 보더 색/라운드 정리.
+           기본 요소 간 gap(16px)도 줄여서 화면 전체 스크롤 길이를 줄인다. --- */
         div[data-testid="stVerticalBlock"] {
             border-radius: var(--radius-card);
             border-color: var(--line);
+            gap: 10px;
         }
 
         /* --- Expander (보조/검증 정보) --- */
@@ -157,14 +241,55 @@ def inject_css() -> None:
 
         /* --- 코드 블록 --- */
         div[data-testid="stCodeBlock"] { border-radius: var(--radius-control); }
+
+        /* --- 통화 녹취록: 긴 발화가 화면 밖으로 잘리지 않도록 줄바꿈 --- */
+        .transcript-block { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 0.84rem; line-height: 1.8; color: var(--ink); background: var(--surface-muted);
+            border-radius: var(--radius-control); padding: 14px 16px; margin-bottom: 10px;
+            white-space: pre-wrap; word-break: break-word; }
+
+        /* --- 구분선(st.markdown("---")): 기본 32px 여백은 과해서 축소 --- */
+        hr { margin: 14px 0 !important; }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
 
-def render_logo_banner() -> None:
-    """상단 로고 배너 — 사내 시스템 화면임을 나타내는 최소한의 브랜드 마크만 표시."""
+def render_top_bar(title_text: str, fc_id: str = "") -> None:
+    """상단 유틸리티 바 — 좌측에 현재 단계/화면명, 우측에 로그인한 FC 정보.
+
+    화면마다 반복되던 큰 페이지 제목(page_header)을 없애고 이 한 줄로
+    대체해 스크롤 길이를 줄인다. 로고는 사이드바 상단에 있고
+    (render_sidebar_logo), 여기엔 실제 데이터에 있는 담당 FC ID만
+    표시한다(가상 인물명은 만들지 않음).
+    """
+    import streamlit as st
+
+    initials = nfc(fc_id).split("-")[0] if fc_id else "FC"
+    user_html = ""
+    if fc_id:
+        user_html = (
+            '<div class="user-chip">'
+            f'<span class="avatar">{initials}</span>'
+            '<span class="info">'
+            f'<span class="name">{nfc(fc_id)}</span>'
+            '<span class="role">담당 컨설턴트</span>'
+            "</span>"
+            "</div>"
+        )
+
+    st.markdown(
+        f'<div class="top-bar">'
+        f'<span class="breadcrumb">{nfc(title_text)}</span>'
+        f"{user_html}"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
+
+
+def render_sidebar_logo() -> None:
+    """사이드바 최상단 로고 스트립 — 사내 시스템 소속을 나타내는 브랜드 마크."""
     import base64
     from pathlib import Path
 
@@ -175,28 +300,67 @@ def render_logo_banner() -> None:
         return
     b64 = base64.b64encode(logo_path.read_bytes()).decode("ascii")
     st.markdown(
-        f'<div class="logo-banner"><img src="data:image/png;base64,{b64}" alt="동양생명" /></div>',
+        f'<div class="sidebar-logo"><img src="data:image/png;base64,{b64}" alt="동양생명" /></div>',
         unsafe_allow_html=True,
     )
 
 
-def page_header(title: str, step_label: str) -> None:
-    """화면 최상단 제목 — 스테퍼 라벨(eyebrow) + 제목 조합으로 통일."""
+def render_field_row(fields: list[tuple[str, str]]) -> None:
+    """라벨/값 필드를 가로로 나열 — 레코드 상세 화면의 정보 블록 스타일."""
     import streamlit as st
 
+    cells = "".join(
+        f'<div class="field"><span class="field-label">{nfc(label)}</span>'
+        f'<span class="field-value">{nfc(value)}</span></div>'
+        for label, value in fields
+    )
+    st.markdown(f'<div class="field-row">{cells}</div>', unsafe_allow_html=True)
+
+
+def render_data_table(headers: list[str], rows: list[list[str]], num_col: int | None = None, mono_col: int | None = None) -> None:
+    """헤더 행 + 줄무늬 행을 가진 데이터 테이블 렌더링 (업무 시스템 그리드 스타일)."""
+    import streamlit as st
+
+    thead = "".join(f"<th>{nfc(h)}</th>" for h in headers)
+    body_rows = []
+    for row in rows:
+        cells = []
+        for i, val in enumerate(row):
+            cls = ""
+            if num_col is not None and i == num_col:
+                cls = ' class="num"'
+            elif mono_col is not None and i == mono_col:
+                cls = ' class="mono"'
+            cells.append(f"<td{cls}>{nfc(str(val))}</td>")
+        body_rows.append(f"<tr>{''.join(cells)}</tr>")
     st.markdown(
-        f'<div class="page-eyebrow">{nfc(step_label)}</div>'
-        f'<div class="page-title">{nfc(title)}</div>',
+        f'<table class="data-table"><thead><tr>{thead}</tr></thead>'
+        f'<tbody>{"".join(body_rows)}</tbody></table>',
         unsafe_allow_html=True,
     )
+
+
+def render_transcript(text: str) -> None:
+    """통화 녹취록 — st.code()는 긴 줄이 화면 밖으로 잘려 가로 스크롤이 생기므로,
+    줄바꿈되는 모노스페이스 블록으로 대신 렌더링한다."""
+    import html
+
+    import streamlit as st
+
+    escaped = html.escape(nfc(text))
+    st.markdown(f'<div class="transcript-block">{escaped}</div>', unsafe_allow_html=True)
 
 
 def section_header(title: str, first: bool = False) -> None:
-    """화면 내부 섹션 제목 — 페이지 제목과 구분되는 축소된 위계로 통일."""
+    """화면 내부 섹션 제목 — 좌측 accent bar + 텍스트."""
     import streamlit as st
 
     cls = "section-header first" if first else "section-header"
-    st.markdown(f'<div class="{cls}">{nfc(title)}</div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="{cls}"><span class="bar"></span>'
+        f'<span class="label">{nfc(title)}</span></div>',
+        unsafe_allow_html=True,
+    )
 
 
 def render_stepper(steps: dict[str, str], current: str) -> None:
@@ -210,24 +374,21 @@ def render_stepper(steps: dict[str, str], current: str) -> None:
     for i, key in enumerate(keys):
         label = nfc(steps[key])
         if i < current_idx:
-            state, icon = "done", "✓"
+            state = "done"
         elif i == current_idx:
-            state, icon = "current", str(i + 1)
+            state = "current"
         else:
-            state, icon = "upcoming", str(i + 1)
+            state = "upcoming"
         rows.append(
             f'<div class="step step-{state}">'
-            f'<span class="step-dot">{icon}</span>'
-            f'<span class="step-label">{label}</span>'
+            f'<div class="step-eyebrow">STEP 0{i + 1}</div>'
+            f'<div class="step-label">{label}</div>'
             f"</div>"
         )
     st.markdown(f'<div class="stepper">{"".join(rows)}</div>', unsafe_allow_html=True)
 
 
-def render_evidence(evidence: Any, label: str | None = None, key_prefix: str = "ev") -> None:
-    """single evidence dict 또는 evidence 목록을 펼치기 영역으로 렌더링."""
-    import streamlit as st
-
+def _extract_evidence_items(evidence: Any) -> list[dict[str, Any]]:
     items: list[dict[str, Any]] = []
     if isinstance(evidence, dict) and ("evidenceType" in evidence or "evidenceText" in evidence):
         items = [evidence]
@@ -238,23 +399,49 @@ def render_evidence(evidence: Any, label: str | None = None, key_prefix: str = "
         for v in evidence.values():
             if isinstance(v, dict) and "evidenceText" in v:
                 items.append(v)
+    return items
 
+
+def _render_evidence_blocks(items: list[dict[str, Any]]) -> None:
+    import streamlit as st
+
+    for ev in items:
+        etype = nfc(str(ev.get("evidenceType", "")))
+        eref = nfc(str(ev.get("evidenceRef", "")))
+        etext = nfc(str(ev.get("evidenceText", "")))
+        st.markdown(
+            f"""
+            <div class="ev-block">
+            <b>{etype}</b> · <code>{eref}</code><br/>
+            {etext}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+def render_evidence(evidence: Any, label: str | None = None, key_prefix: str = "ev") -> None:
+    """single evidence dict 또는 evidence 목록을 펼치기 영역으로 렌더링."""
+    import streamlit as st
+
+    items = _extract_evidence_items(evidence)
     if not items:
         st.caption("(근거 없음)")
         return
 
     title = label or f"근거 확인 {key_prefix}"
     with st.expander(title):
-        for ev in items:
-            etype = nfc(str(ev.get("evidenceType", "")))
-            eref = nfc(str(ev.get("evidenceRef", "")))
-            etext = nfc(str(ev.get("evidenceText", "")))
-            st.markdown(
-                f"""
-                <div class="ev-block">
-                <b>{etype}</b> · <code>{eref}</code><br/>
-                {etext}
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+        _render_evidence_blocks(items)
+
+
+def render_item_evidence(text: str, evidence: Any, key_prefix: str = "item") -> None:
+    """항목 텍스트 자체를 펼치기 제목으로 써서, 항목 한 줄 + 근거 박스로 따로 나뉘던 걸
+    하나의 expander로 합친다 (반복되는 '근거' 라벨과 줄 수를 줄이기 위함)."""
+    import streamlit as st
+
+    items = _extract_evidence_items(evidence)
+    if not items:
+        st.markdown(f"- {nfc(text)}")
+        return
+    with st.expander(nfc(text)):
+        _render_evidence_blocks(items)

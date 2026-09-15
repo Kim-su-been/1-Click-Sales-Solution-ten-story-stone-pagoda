@@ -16,9 +16,6 @@ from typing import Any
 
 from src.data_loader import Customer, Contract, DataLoader, DataLoadingError
 from src.config import DEMO_AS_OF_DATE
-from src.demo_state import (
-    set_transcript_loaded,
-)
 from src.runtime_models import (
     AgentError,
     RuntimeResult,
@@ -208,7 +205,6 @@ def run_pipeline(inp: PipelineInput, saved_transcript: str | None = None) -> Orc
     if not _assert_transition(state, WorkflowState.TRANSCRIPT_READY, errors):
         return _error_result(errors, steps, state)
     state = WorkflowState.TRANSCRIPT_READY
-    set_transcript_loaded(bool(script_text))
     steps.append(StepResult(
         state=state,
         step_name="transcript_ready",
@@ -237,7 +233,7 @@ def run_pipeline(inp: PipelineInput, saved_transcript: str | None = None) -> Orc
     if not _assert_transition(state, WorkflowState.CRM_DRAFT, errors):
         return _error_result(errors, steps, state)
     state = WorkflowState.CRM_DRAFT
-    crm_envelope = build_crm_record_envelope(dict(ca.crm_draft))
+    crm_envelope = build_crm_record_envelope(dict(ca.crm_draft), ca.analysis)
     steps.append(StepResult(
         state=state,
         step_name="crm_draft",

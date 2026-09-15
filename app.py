@@ -11,13 +11,12 @@ import streamlit as st
 import src.config as cfg
 import src.demo_state as demo_state
 from src.data_loader import DataLoadingError, get_loader
-from ui.common import inject_css, render_logo_banner, render_stepper
+from ui.common import inject_css, render_sidebar_logo, render_stepper, render_top_bar
 
 
 def main() -> None:
     st.set_page_config(page_title=cfg.APP_TITLE, layout="wide")
     inject_css()
-    render_logo_banner()
 
     try:
         loader = get_loader()
@@ -32,8 +31,13 @@ def main() -> None:
         cfg.SCREEN_CONSULTATION: "상담 진행",
         cfg.SCREEN_CLOSING: "상담 완료",
     }
+    fc_id = next(iter(loader.customers.values())).fc_id if loader.customers else ""
+    step_keys = list(steps.keys())
+    step_idx = step_keys.index(screen) if screen in step_keys else 0
+    render_top_bar(f"STEP {step_idx + 1}/3 · {steps[step_keys[step_idx]]}", fc_id)
+
     with st.sidebar:
-        st.markdown('<div class="sidebar-eyebrow">진행 단계</div>', unsafe_allow_html=True)
+        render_sidebar_logo()
         render_stepper(steps, screen)
 
     # 화면 라우팅

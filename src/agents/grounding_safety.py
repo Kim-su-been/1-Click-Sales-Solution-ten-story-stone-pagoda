@@ -79,18 +79,28 @@ def _build_contact_reason(customer: Customer, contracts: list[Contract]) -> dict
     if d_left is None:
         return {
             "code": "GENERAL_CHECKUP",
-            "text": "고객 계약 및 보장 내용 사전 점검 안내",
-            "pick_basis": "갱신 예정 계약이 없어 일반 계약 점검 목적으로 연락",
+            "text": (
+                "현재 갱신이 예정된 계약은 없지만, 한동안 연락이 뜸했던 고객이라 "
+                "기존 가입 내용과 보장 상태를 한번 점검해 드리는 것이 좋겠습니다."
+            ),
+            "pick_basis": (
+                "갱신처럼 시급한 사유는 없지만, 연락 공백을 줄이고 보장 내용을 "
+                "재확인해 드릴 수 있는 시점이라고 판단해 오늘의 1-Pick으로 선정했습니다."
+            ),
         }
     # 날짜 계산은 DEMO_AS_OF_DATE 기준
     renewal_dates = [c.renewal_date for c in contracts if c.renewal_date]
     renewal = min(renewal_dates, key=lambda d: days_until_demo(d))
     return {
         "code": "RENEWAL_PRENOTICE",
-        "text": f"가입 중인 갱신형 특약의 갱신 예정일({renewal}, D-{d_left}) 사전 안내",
+        "text": (
+            f"가입 중인 갱신형 특약의 갱신 예정일이 {renewal}(D-{d_left})로 다가오고 있어, "
+            f"갱신 조건과 보험료 재산정 가능성을 미리 안내해 드려야 하는 고객입니다."
+        ),
         "pick_basis": (
-            f"갱신 예정일까지 {d_left}일 남아 가장 시급하면서 "
-            f"고객 편익(갱신 조건 사전 확인)이 높음"
+            f"갱신 예정일까지 {d_left}일밖에 남지 않아 다른 후보 고객보다 연락이 시급하고, "
+            f"갱신 조건을 미리 안내해 드리면 고객님께도 실질적인 도움이 되기 때문에 "
+            f"오늘의 1-Pick으로 선정했습니다."
         ),
     }
 
@@ -108,16 +118,30 @@ def _fc_name_placeholder(customer: Customer) -> str:
     return "FC ○○○"
 
 
-def _build_call_script(customer: Customer, reason_text: str) -> str:
-    return (
+def _build_call_script(customer: Customer, contact_reason: dict[str, str]) -> str:
+    """통화 스크립트는 고객에게 말로 전달하는 문장이므로, 내부 선정 사유
+    문구(contact_reason['text'], 3인칭 설명체)를 그대로 붙이지 않고 코드별로
+    자연스러운 2인칭 안내 문장을 별도로 구성한다."""
+    greeting = (
         f"안녕하세요, {customer.name} 고객님. 새롭게 계약 관리를 맡게 된 "
-        f"{_fc_name_placeholder(customer)}입니다. 바쁘신 시간에 갑작스레 연락드려 죄송합니다. "
-        f"다름이 아니라 {reason_text} 차원에서 연락드렸습니다. "
-        f"갱신 시점에는 고객님의 연령과 보장 내용에 따라 보험료가 재산정될 수 있어, "
-        f"갱신 조건을 미리 안내해 드리고자 연락드렸습니다. "
+        f"{_fc_name_placeholder(customer)}입니다. 바쁘신 시간에 갑작스레 연락드려 죄송합니다."
+    )
+    if contact_reason.get("code") == "RENEWAL_PRENOTICE":
+        reason = (
+            f"다름이 아니라 가입 중인 갱신형 특약의 갱신 예정일이 다가오고 있어 연락드렸습니다. "
+            f"갱신 시점에는 고객님의 연령과 보장 내용에 따라 보험료가 재산정될 수 있어, "
+            f"갱신 조건을 미리 안내해 드리고자 합니다."
+        )
+    else:
+        reason = (
+            f"다름이 아니라 그동안 연락이 뜸했던 것 같아 연락드렸습니다. "
+            f"가입해 두신 보장 내용이 지금도 상황에 잘 맞는지 한번 점검해 드리고자 합니다."
+        )
+    closing = (
         f"갱신 여부는 고객님께서 편하게 결정하시면 되고, 궁금하신 점이 있으시면 언제든 편하게 여쭤봐 주세요. "
         f"혹시 지금 통화 괜찮으실까요? 어려우시면 편하신 시간에 다시 연락드리겠습니다."
     )
+    return "\n\n".join([greeting, reason, closing])
 
 
 def _build_sms_script(customer: Customer, renewal: str) -> str:
@@ -213,7 +237,7 @@ def run_grounding_safety(
     if renewal_dates:
         renewal = min(renewal_dates, key=days_until_demo)
 
-    call_text = _build_call_script(customer, contact_reason["text"])
+    call_text = _build_call_script(customer, contact_reason)
     sms_text = _build_sms_script(customer, renewal or "")
     kakao_text = _build_kakao_script(customer, renewal or "")
 
