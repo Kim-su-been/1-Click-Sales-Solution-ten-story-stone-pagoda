@@ -133,9 +133,6 @@ def inject_css() -> None:
         [data-testid="stSidebar"][aria-expanded="true"] { min-width: 230px !important; width: 230px !important; }
         [data-testid="stSidebar"][aria-expanded="true"] > div { width: 230px !important; }
         [data-testid="stSidebar"][aria-expanded="false"] { min-width: 0 !important; width: 0 !important; }
-        .sidebar-eyebrow { font-size: 0.74rem; font-weight: 700; letter-spacing: .05em;
-            color: var(--ink-tertiary); text-transform: uppercase; margin: 0 0 10px 1px; }
-
         /* --- 섹션 헤더: 하단 보더로 구획을 명확히 구분 --- */
         .section-header { font-size: 1rem; font-weight: 700; color: var(--ink);
             margin: 32px 0 12px 0; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
@@ -147,7 +144,7 @@ def inject_css() -> None:
         .pick-card .title { font-size: 1.1rem; font-weight: 700; color: var(--ink); margin-top: 10px; }
         .pick-card .score-badge { display: inline-block; background: var(--accent); color: #ffffff;
             font-weight: 700; padding: 5px 14px; border-radius: var(--radius-badge); font-size: 0.88rem;
-            letter-spacing: .01em; }
+            letter-spacing: .01em; font-variant-numeric: tabular-nums; }
 
         /* --- 상태 태그 (배지): 각진 라벨 형태, 소프트 컬러 --- */
         .badge { display: inline-block; padding: 3px 10px; border-radius: var(--radius-badge);
@@ -165,7 +162,8 @@ def inject_css() -> None:
         .field-row .field { display: flex; flex-direction: column; gap: 4px; }
         .field-row .field-label { font-size: 0.68rem; font-weight: 700; color: var(--ink-tertiary);
             text-transform: uppercase; letter-spacing: .04em; }
-        .field-row .field-value { font-size: 0.92rem; font-weight: 600; color: var(--ink); }
+        .field-row .field-value { font-size: 0.92rem; font-weight: 600; color: var(--ink);
+            font-variant-numeric: tabular-nums; }
 
         /* --- 데이터 테이블: 업무 시스템 그리드 스타일 (헤더 행 + 줄무늬 행) --- */
         .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
@@ -175,7 +173,8 @@ def inject_css() -> None:
         .data-table td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--ink); }
         .data-table tbody tr:last-child td { border-bottom: none; }
         .data-table tbody tr:nth-child(even) { background: var(--surface-muted); }
-        .data-table td.num { text-align: right; font-weight: 700; color: var(--accent); white-space: nowrap; }
+        .data-table td.num { text-align: right; font-weight: 700; color: var(--accent); white-space: nowrap;
+            font-variant-numeric: tabular-nums; }
         .data-table td.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
             font-size: 0.76rem; color: var(--ink-tertiary); }
 

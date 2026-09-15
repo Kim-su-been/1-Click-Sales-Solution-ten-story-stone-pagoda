@@ -38,7 +38,6 @@ def main() -> None:
 
     with st.sidebar:
         render_sidebar_logo()
-        st.markdown('<div class="sidebar-eyebrow">진행 단계</div>', unsafe_allow_html=True)
         render_stepper(steps, screen)
 
     # 화면 라우팅
