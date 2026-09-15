@@ -128,28 +128,32 @@ def inject_css() -> None:
         [data-testid="stHeader"] { display: none; }
 
         /* --- 사이드바: 좌우 padding을 직접 작은 값으로 고정해 왼쪽 여백을 줄인다.
-           (이전에는 Streamlit 기본 padding을 음수 마진으로 "상쇄"하는 방식이었는데,
-           그 기본값이 환경마다 달라 보더가 안 보이거나 여백이 크게 남는 문제가 있었다.
-           이제 모든 사이드바 요소가 padding만으로 일관되게 정렬된다.) --- */
-        [data-testid="stSidebarContent"] {
-            padding-top: 0.75rem;
+           선택자를 반복해 specificity를 인위적으로 높인다 — Streamlit이 내부적으로
+           클래스 2개 이상을 묶은 선택자(.st-emotion-cache-xxx.yyy)로 padding을 주는
+           경우, 단순 속성 선택자 1개(!important 포함)로는 specificity가 밀려
+           덮어쓰지 못하는 환경이 있었다(사용자 환경에서 왼쪽 여백이 그대로 남는 문제로 확인). */
+        [data-testid="stSidebarContent"][data-testid="stSidebarContent"][data-testid="stSidebarContent"] {
+            padding-top: 0.75rem !important;
             padding-left: 10px !important;
             padding-right: 10px !important;
         }
-        [data-testid="stSidebarHeader"] { height: 30px !important; min-height: 30px !important; }
-        [data-testid="stSidebarUserContent"] { padding-bottom: 12px !important; }
+        [data-testid="stSidebarHeader"][data-testid="stSidebarHeader"][data-testid="stSidebarHeader"] {
+            height: 30px !important; min-height: 30px !important;
+        }
+        [data-testid="stSidebarUserContent"][data-testid="stSidebarUserContent"][data-testid="stSidebarUserContent"] {
+            padding-bottom: 12px !important; padding-left: 0 !important; padding-right: 0 !important;
+        }
         /* 펼쳐진 상태에서만 폭을 좁히고, 접힌 상태(aria-expanded="false")는 강제하지 않는다.
            그래야 사이드바를 접었을 때 본문이 그만큼 다시 채워진다. */
-        [data-testid="stSidebar"][aria-expanded="true"] { min-width: 230px !important; width: 230px !important; }
-        [data-testid="stSidebar"][aria-expanded="true"] > div { width: 230px !important; }
-        [data-testid="stSidebar"][aria-expanded="false"] { min-width: 0 !important; width: 0 !important; }
-        /* --- 섹션 헤더: 하단 보더로 구획을 명확히 구분 --- */
+        [data-testid="stSidebar"][aria-expanded="true"][aria-expanded="true"] { min-width: 230px !important; width: 230px !important; }
+        [data-testid="stSidebar"][aria-expanded="true"][aria-expanded="true"] > div { width: 230px !important; }
+        [data-testid="stSidebar"][aria-expanded="false"][aria-expanded="false"] { min-width: 0 !important; width: 0 !important; }
+        /* --- 섹션 헤더: 좌측 accent bar + 텍스트 (트레일링 선은 제거) --- */
         .section-header { display: flex; align-items: center; gap: 10px;
             font-size: 1rem; font-weight: 700; color: var(--ink); margin: 22px 0 10px 0; }
         .section-header .bar { width: 3px; height: 15px; background: var(--accent);
             border-radius: 2px; flex: 0 0 auto; }
         .section-header .label { white-space: nowrap; }
-        .section-header .rule { flex: 1 1 auto; height: 1px; background: var(--line); }
         .section-header.first { margin-top: 4px; }
 
         /* --- 카드: 좌측 accent 보더로 강조. Apple 시스템처럼 그림자 없이 보더만으로 구분 --- */
@@ -332,13 +336,13 @@ def render_data_table(headers: list[str], rows: list[list[str]], num_col: int | 
 
 
 def section_header(title: str, first: bool = False) -> None:
-    """화면 내부 섹션 제목 — 좌측 accent bar + 텍스트 + 우측으로 이어지는 얇은 선."""
+    """화면 내부 섹션 제목 — 좌측 accent bar + 텍스트."""
     import streamlit as st
 
     cls = "section-header first" if first else "section-header"
     st.markdown(
         f'<div class="{cls}"><span class="bar"></span>'
-        f'<span class="label">{nfc(title)}</span><span class="rule"></span></div>',
+        f'<span class="label">{nfc(title)}</span></div>',
         unsafe_allow_html=True,
     )
 
