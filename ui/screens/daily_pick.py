@@ -92,11 +92,7 @@ def render(loader: DataLoader) -> None:
     # --- Contact Reason ---
     reason = gs.contact_reason
     section_header("추천 연락 사유")
-    st.markdown(
-        f'<b>{nfc(reason["text"])}</b> '
-        f'<span class="badge badge-info">{nfc(reason["code"])}</span>',
-        unsafe_allow_html=True,
-    )
+    st.markdown(f'<b>{nfc(reason["text"])}</b>', unsafe_allow_html=True)
     st.caption(nfc(reason.get("pick_basis", "")))
 
     # --- 채널 버튼 (Compliance 통과 스크립트는 발신 전 확인창에서 노출) ---
@@ -217,28 +213,6 @@ def render(loader: DataLoader) -> None:
         if st.button("다시 선택하기", key="reset_channel_postpone"):
             results_now.pop("POSTPONED", None)
             st.rerun()
-
-    # --- Stage 2 Runtime 패널: 판매 흐름과 분리된 검증용 패널 ---
-    with st.expander("기능 검증 정보 — Stage 2 Runtime (Orchestrator)"):
-        st.caption(
-            "Runtime Agent 파이프라인 실행 로그입니다. 위 화면 구성과는 별개로, "
-            "내부 동작이 정상인지 확인하려는 개발/QA 목적으로 제공됩니다."
-        )
-        st.caption("POOL_SCAN → SCORING → PICK_READY → GROUNDING → SAFETY_CHECK → … → DONE")
-        try:
-            from src.agents.orchestrator import run_demo_pipeline
-
-            result = run_demo_pipeline()
-            st.markdown(f"**Workflow 상태:** `{result.output.workflow_state}`")
-            if result.output.errors:
-                st.error(" → ".join(e.reason for e in result.output.errors))
-            else:
-                st.success("전체 사이클 정상 완료 (DONE) · 오류 없음")
-            with st.expander("단계별 Evidence (StepResult)"):
-                for s in result.steps:
-                    st.markdown(f"- **`{s.step_name}`** → `{s.state}` — {nfc(s.summary)}")
-        except Exception as exc:  # noqa: BLE001
-            st.warning(f"Stage 2 런타임을 실행하지 못했습니다: {exc}")
 
 
 def _renewal_date(loader: DataLoader, cust_id: str) -> str | None:
