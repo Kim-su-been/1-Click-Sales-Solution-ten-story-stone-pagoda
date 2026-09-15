@@ -144,8 +144,12 @@ def inject_css() -> None:
         [data-testid="stSidebar"][aria-expanded="true"] > div { width: 230px !important; }
         [data-testid="stSidebar"][aria-expanded="false"] { min-width: 0 !important; width: 0 !important; }
         /* --- 섹션 헤더: 하단 보더로 구획을 명확히 구분 --- */
-        .section-header { font-size: 1rem; font-weight: 700; color: var(--ink);
-            margin: 22px 0 10px 0; padding-bottom: 7px; border-bottom: 1px solid var(--line); }
+        .section-header { display: flex; align-items: center; gap: 10px;
+            font-size: 1rem; font-weight: 700; color: var(--ink); margin: 22px 0 10px 0; }
+        .section-header .bar { width: 3px; height: 15px; background: var(--accent);
+            border-radius: 2px; flex: 0 0 auto; }
+        .section-header .label { white-space: nowrap; }
+        .section-header .rule { flex: 1 1 auto; height: 1px; background: var(--line); }
         .section-header.first { margin-top: 4px; }
 
         /* --- 카드: 좌측 accent 보더로 강조. Apple 시스템처럼 그림자 없이 보더만으로 구분 --- */
@@ -328,11 +332,15 @@ def render_data_table(headers: list[str], rows: list[list[str]], num_col: int | 
 
 
 def section_header(title: str, first: bool = False) -> None:
-    """화면 내부 섹션 제목 — 페이지 제목과 구분되는 축소된 위계로 통일."""
+    """화면 내부 섹션 제목 — 좌측 accent bar + 텍스트 + 우측으로 이어지는 얇은 선."""
     import streamlit as st
 
     cls = "section-header first" if first else "section-header"
-    st.markdown(f'<div class="{cls}">{nfc(title)}</div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="{cls}"><span class="bar"></span>'
+        f'<span class="label">{nfc(title)}</span><span class="rule"></span></div>',
+        unsafe_allow_html=True,
+    )
 
 
 def render_stepper(steps: dict[str, str], current: str) -> None:
