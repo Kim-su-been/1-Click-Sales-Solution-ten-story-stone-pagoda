@@ -65,15 +65,15 @@ def inject_css() -> None:
             --shadow-card: 0 1px 2px rgba(15,23,42,0.04), 0 6px 20px rgba(15,23,42,0.06);
         }
 
-        [data-testid="stAppViewContainer"] .block-container { padding-top: 4rem; max-width: 1120px; }
+        [data-testid="stAppViewContainer"] .block-container { padding-top: 4.5rem; max-width: 1120px; }
         html, body, [class*="css"] { color: var(--ink); }
 
         h1 { font-size: 1.3rem !important; }
 
         /* --- 상단 로고 배너 (우측 정렬) --- */
         .logo-banner { display: flex; justify-content: flex-end;
-            padding: 2px 0 16px 0; margin-bottom: 12px; border-bottom: 1px solid var(--line); }
-        .logo-banner img { height: 26px; display: block; }
+            padding: 0 0 10px 0; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
+        .logo-banner img { height: 22px; display: block; }
 
         /* --- 사이드바 --- */
         [data-testid="stSidebarContent"] { padding-top: 0.75rem; }
@@ -107,9 +107,8 @@ def inject_css() -> None:
         .badge-warn { background: var(--warn-bg); color: var(--warn); }
         .badge-info { background: var(--accent-weak); color: var(--accent); }
 
-        /* --- 고지/안내 문구 --- */
-        .notice { background: var(--surface-muted); border-radius: var(--radius-control);
-            padding: 12px 16px; font-size: 0.82rem; color: var(--ink-secondary); }
+        /* --- 고지/안내 문구: 화면을 압도하지 않도록 캡션 수준으로 축소 --- */
+        .notice { font-size: 0.74rem; color: var(--ink-tertiary); margin: -6px 0 22px 0; line-height: 1.5; }
 
         /* --- 근거 블록 --- */
         .ev-block { background: var(--surface-muted); border-radius: var(--radius-control);
