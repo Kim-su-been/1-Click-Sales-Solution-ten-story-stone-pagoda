@@ -102,17 +102,16 @@ def inject_css() -> None:
 
         h1 { font-size: 1.3rem !important; }
 
-        /* --- 상단 앱 바: 패널 상단 전체 폭에 색이 채워진 업무 시스템 헤더.
-           패널 padding(28px 40px)만큼 음수 마진으로 가장자리까지 색을 채운다. --- */
+        /* --- 상단 유틸리티 바: 좌측 breadcrumb(시스템 내 위치) · 우측 로고 --- */
         .top-bar { display: flex; justify-content: space-between; align-items: center;
-            background: var(--accent-strong); color: #ffffff;
-            padding: 15px 40px; margin: -28px -40px 24px -40px;
-            border-radius: var(--radius-card) var(--radius-card) 0 0; }
-        .top-bar .breadcrumb { font-size: 0.82rem; color: rgba(255,255,255,0.82); font-weight: 500; }
-        .top-bar .breadcrumb b { color: #ffffff; font-weight: 700; }
-        .top-bar .logo-chip { background: #ffffff; padding: 5px 12px; border-radius: 6px;
-            display: flex; align-items: center; line-height: 0; }
-        .top-bar .logo-chip img { height: 18px; display: block; }
+            padding: 0 0 14px 0; margin-bottom: 22px; border-bottom: 1px solid var(--line); }
+        .top-bar .breadcrumb { font-size: 0.78rem; color: var(--ink-tertiary); font-weight: 500; }
+        .top-bar .breadcrumb b { color: var(--ink-secondary); font-weight: 700; }
+        .top-bar .logo-chip { display: flex; align-items: center; line-height: 0; }
+        .top-bar .logo-chip img { height: 20px; display: block; }
+
+        /* --- Streamlit 기본 헤더 툴바(Deploy/메뉴) 숨김 — 우리 상단 바와 중복되는 흰 띠 제거 --- */
+        [data-testid="stHeader"] { display: none; }
 
         /* --- 사이드바 --- */
         [data-testid="stSidebarContent"] { padding-top: 0.75rem; }
