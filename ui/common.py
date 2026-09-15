@@ -61,10 +61,12 @@ def inject_css() -> None:
             --ok-bg: #e5f2ea;
             --warn: #9a5b0a;
             --warn-bg: #faf0dd;
-            --radius-card: 4px;
-            --radius-control: 4px;
-            --radius-badge: 2px;
+            --radius-card: 12px;
+            --radius-control: 6px;
+            --radius-badge: 4px;
             --radius-pill: 999px;
+            --shadow-card: 0 1px 3px rgba(15,45,84,0.08);
+            --shadow-panel: 0 8px 24px rgba(15,45,84,0.06), 0 2px 6px rgba(15,45,84,0.04);
         }
 
         /* 우리다움체 (우리금융그룹 공식 무료 서체) — 로드 실패 시 시스템 고딕 폰트로 자연스럽게 대체 */
@@ -92,6 +94,7 @@ def inject_css() -> None:
             background: var(--surface);
             border: 1px solid var(--line);
             border-radius: var(--radius-card);
+            box-shadow: var(--shadow-panel);
             padding: 28px 40px 40px;
         }
         html, body, [class*="css"] {
@@ -119,7 +122,7 @@ def inject_css() -> None:
         /* --- 사이드바 로고: 사이드바 상단, 가운데 정렬 --- */
         .sidebar-logo { display: flex; justify-content: center; align-items: center;
             padding: 8px 20px; margin: -12px -20px 14px -20px; }
-        .sidebar-logo img { height: 36px; display: block; }
+        .sidebar-logo img { height: 26px; display: block; }
 
         /* --- Streamlit 기본 헤더 툴바(Deploy/메뉴) 숨김 — 우리 상단 바와 중복되는 흰 띠 제거 --- */
         [data-testid="stHeader"] { display: none; }
@@ -138,9 +141,9 @@ def inject_css() -> None:
             margin: 32px 0 12px 0; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
         .section-header.first { margin-top: 4px; }
 
-        /* --- 카드: 좌측 accent 보더로 강조. Apple 시스템처럼 그림자 없이 보더만으로 구분 --- */
+        /* --- 카드: 좌측 accent 보더 + Stripe 스타일의 옅은 그림자로 살짝 떠 보이게 --- */
         .pick-card { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent);
-            border-radius: var(--radius-card); padding: 24px; }
+            border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 24px; }
         .pick-card .title { font-size: 1.1rem; font-weight: 700; color: var(--ink); margin-top: 10px; }
         .pick-card .score-badge { display: inline-block; background: var(--accent); color: #ffffff;
             font-weight: 700; padding: 5px 14px; border-radius: var(--radius-badge); font-size: 0.88rem;
@@ -194,10 +197,11 @@ def inject_css() -> None:
         .step-current .step-eyebrow { color: var(--accent); }
         .step-current .step-label { color: var(--ink); font-weight: 700; }
 
-        /* --- 버튼: 단일 accent, 각진 radius, 툴바에 가까운 높이감 --- */
+        /* --- 버튼: Stripe 스타일 pill 버튼 — "짧고 단호하고 즉각적인" 액션 느낌 --- */
         div[data-testid="stButton"] button {
-            border-radius: var(--radius-control) !important;
-            padding-top: 0.42rem !important; padding-bottom: 0.42rem !important;
+            border-radius: var(--radius-pill) !important;
+            padding: 0.5rem 1.15rem !important;
+            font-weight: 500 !important;
         }
         div[data-testid="stButton"] button[kind="primary"],
         div[data-testid="stButton"] button[kind="primaryFormSubmit"] {
@@ -210,10 +214,11 @@ def inject_css() -> None:
             border-color: var(--line); color: var(--ink);
         }
 
-        /* --- st.container(border=True): Streamlit 기본 보더 색/라운드만 정리 --- */
+        /* --- st.container(border=True): Streamlit 기본 보더 색/라운드 정리 + 옅은 그림자 --- */
         div[data-testid="stVerticalBlock"] {
             border-radius: var(--radius-card);
             border-color: var(--line);
+            box-shadow: var(--shadow-card);
         }
 
         /* --- Expander (보조/검증 정보) --- */
