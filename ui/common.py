@@ -47,26 +47,32 @@ def inject_css() -> None:
         """
         <style>
         :root {
-            --accent: #3182f6;
-            --accent-weak: #eaf2fe;
-            --ink: #191f28;
-            --ink-secondary: #6b7684;
-            --ink-tertiary: #8b95a1;
-            --line: #f2f4f6;
+            --accent: #0e5a82;
+            --accent-strong: #0a4260;
+            --accent-weak: #e8f0f4;
+            --ink: #16212e;
+            --ink-secondary: #5b6b7c;
+            --ink-tertiary: #85919d;
+            --line: #dfe4e9;
             --surface: #ffffff;
-            --surface-muted: #f9fafb;
-            --ok: #12805c;
-            --ok-bg: #e3f6ec;
-            --warn: #b25e09;
-            --warn-bg: #fdf1df;
-            --radius-card: 16px;
-            --radius-control: 12px;
+            --surface-muted: #f5f7f9;
+            --ok: #146c47;
+            --ok-bg: #e5f2ea;
+            --warn: #9a5b0a;
+            --warn-bg: #faf0dd;
+            --radius-card: 8px;
+            --radius-control: 6px;
+            --radius-badge: 4px;
             --radius-pill: 999px;
-            --shadow-card: 0 1px 2px rgba(15,23,42,0.04), 0 6px 20px rgba(15,23,42,0.06);
+            --shadow-card: 0 1px 2px rgba(15,23,42,0.05);
         }
 
         [data-testid="stAppViewContainer"] .block-container { padding-top: 4.5rem; max-width: 1120px; }
-        html, body, [class*="css"] { color: var(--ink); }
+        html, body, [class*="css"] {
+            color: var(--ink);
+            font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+                "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", sans-serif;
+        }
 
         h1 { font-size: 1.3rem !important; }
 
@@ -86,26 +92,27 @@ def inject_css() -> None:
             color: var(--ink-tertiary); text-transform: uppercase; margin: 0 0 10px 1px; }
 
         /* --- 페이지 헤더 --- */
-        .page-eyebrow { font-size: 0.78rem; font-weight: 600; color: var(--accent);
-            margin: 0 0 6px 1px; }
-        .page-title { font-size: 1.7rem; font-weight: 800; color: var(--ink); letter-spacing: -.01em;
+        .page-eyebrow { font-size: 0.76rem; font-weight: 700; color: var(--accent);
+            letter-spacing: .03em; margin: 0 0 6px 1px; }
+        .page-title { font-size: 1.6rem; font-weight: 700; color: var(--ink); letter-spacing: -.005em;
             margin: 0 0 28px 0; }
 
-        /* --- 섹션 헤더: 라인/아이콘 없이 타이포 위계만으로 구분 --- */
-        .section-header { font-size: 1.02rem; font-weight: 700; color: var(--ink);
-            margin: 32px 0 12px 0; }
+        /* --- 섹션 헤더: 하단 보더로 구획을 명확히 구분 --- */
+        .section-header { font-size: 1rem; font-weight: 700; color: var(--ink);
+            margin: 32px 0 12px 0; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
         .section-header.first { margin-top: 4px; }
 
-        /* --- 카드 --- */
-        .pick-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card);
-            box-shadow: var(--shadow-card); padding: 22px 24px; }
-        .pick-card .title { font-size: 1.15rem; font-weight: 700; color: var(--ink); margin-top: 10px; }
+        /* --- 카드: 좌측 accent 보더로 강조, 그림자는 최소화 --- */
+        .pick-card { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+            border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 20px 24px; }
+        .pick-card .title { font-size: 1.1rem; font-weight: 700; color: var(--ink); margin-top: 10px; }
         .pick-card .score-badge { display: inline-block; background: var(--accent); color: #ffffff;
-            font-weight: 700; padding: 6px 16px; border-radius: var(--radius-pill); font-size: 0.9rem; }
+            font-weight: 700; padding: 5px 14px; border-radius: var(--radius-badge); font-size: 0.88rem;
+            letter-spacing: .01em; }
 
-        /* --- 상태 태그 (배지): pill, 보더 없이 소프트 컬러 --- */
-        .badge { display: inline-block; padding: 4px 12px; border-radius: var(--radius-pill);
-            font-size: 0.76rem; font-weight: 600; }
+        /* --- 상태 태그 (배지): 각진 라벨 형태, 소프트 컬러 --- */
+        .badge { display: inline-block; padding: 3px 10px; border-radius: var(--radius-badge);
+            font-size: 0.75rem; font-weight: 600; }
         .badge-ok { background: var(--ok-bg); color: var(--ok); }
         .badge-warn { background: var(--warn-bg); color: var(--warn); }
         .badge-info { background: var(--accent-weak); color: var(--accent); }
@@ -124,17 +131,17 @@ def inject_css() -> None:
             content: ""; position: absolute; left: 13px; top: 32px; width: 2px; height: 18px;
             background: var(--line);
         }
-        .step-dot { flex: 0 0 auto; width: 26px; height: 26px; border-radius: var(--radius-pill);
+        .step-dot { flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 0.72rem; font-weight: 700; background: var(--surface); color: var(--ink-tertiary);
+            font-size: 0.7rem; font-weight: 700; background: var(--surface); color: var(--ink-tertiary);
             border: 1.5px solid var(--line); }
-        .step-label { font-size: 0.86rem; color: var(--ink-tertiary); }
+        .step-label { font-size: 0.85rem; color: var(--ink-tertiary); }
         .step-done .step-dot { background: var(--ok-bg); border-color: var(--ok-bg); color: var(--ok); }
         .step-done .step-label { color: var(--ink-secondary); }
         .step-current .step-dot { background: var(--accent); border-color: var(--accent); color: #fff; }
         .step-current .step-label { color: var(--ink); font-weight: 700; }
 
-        /* --- 버튼: 단일 accent, 넉넉한 radius --- */
+        /* --- 버튼: 단일 accent, 각진 radius --- */
         div[data-testid="stButton"] button {
             border-radius: var(--radius-control) !important;
         }
@@ -143,7 +150,7 @@ def inject_css() -> None:
             background-color: var(--accent); border-color: var(--accent);
         }
         div[data-testid="stButton"] button[kind="primary"]:hover {
-            background-color: #1b64da; border-color: #1b64da;
+            background-color: var(--accent-strong); border-color: var(--accent-strong);
         }
         div[data-testid="stButton"] button[kind="secondary"] {
             border-color: var(--line); color: var(--ink);
