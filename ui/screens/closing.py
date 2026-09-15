@@ -9,6 +9,7 @@ import streamlit as st
 from src import demo_state
 from src.data_loader import DataLoader
 from ui.common import (
+    fmt_dt,
     humanize,
     nfc,
     render_data_table,
@@ -64,7 +65,7 @@ def render(loader: DataLoader) -> None:
     st.markdown(
         f'<span class="badge badge-ok">{humanize(outcome["value"])}</span> '
         f'후속 상담 필요: <b>{"예" if analysis["followup_requested"]["needed"] else "아니오"}</b> · '
-        f'희망 일시 <b>{analysis["followup_requested"].get("preferred_datetime", "")}</b>',
+        f'희망 일시 <b>{fmt_dt(analysis["followup_requested"].get("preferred_datetime", ""))}</b>',
         unsafe_allow_html=True,
     )
     render_evidence(outcome["evidence"], label="결과 근거", key_prefix="outcome")
@@ -85,7 +86,7 @@ def render(loader: DataLoader) -> None:
             ["항목", "내용"],
             [
                 ["<b>상담 유형</b>", nfc(rec.get("consultation_type", "")) or "-"],
-                ["<b>상담 일시</b>", rec.get("consultation_datetime") or "-"],
+                ["<b>상담 일시</b>", fmt_dt(rec.get("consultation_datetime")) or "-"],
                 ["<b>결과</b>", humanize(rec.get("outcome", ""))],
                 ["<b>고객 니즈</b>", ", ".join(humanize(x) for x in rec.get("customer_needs", [])) or "-"],
                 ["<b>관심사</b>", ", ".join(nfc(x) for x in rec.get("customer_interests", [])) or "-"],
@@ -93,7 +94,7 @@ def render(loader: DataLoader) -> None:
                 ["<b>무관심</b>", ", ".join(humanize(x) for x in rec.get("disinterest_items", [])) or "-"],
                 [
                     "<b>후속 필요</b>",
-                    ("예 · 희망 일시 " + str(rec.get("preferred_datetime", "")))
+                    ("예 · 희망 일시 " + fmt_dt(rec.get("preferred_datetime")))
                     if rec.get("followup_needed") else "아니오",
                 ],
             ],
@@ -164,11 +165,11 @@ def render(loader: DataLoader) -> None:
     for act in next_actions:
         st.markdown(
             f"- **{nfc(act['title'])}** — "
-            f"예정일 {act.get('due_datetime')} · 상태: {humanize(act.get('status',''))}"
+            f"예정일 {fmt_dt(act.get('due_datetime'))} · 상태: {humanize(act.get('status',''))}"
         )
     st.markdown("**재상담 일정 후보**")
     st.markdown(
-        f"- {nfc(calendar.get('title',''))} — {calendar.get('due_datetime')} "
+        f"- {nfc(calendar.get('title',''))} — {fmt_dt(calendar.get('due_datetime'))} "
         f"({calendar.get('duration_minutes')}분) · 상태: {humanize(calendar.get('status',''))}"
     )
     render_evidence(calendar.get("evidence"), label="캘린더 근거", key_prefix="cal")

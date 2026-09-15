@@ -24,6 +24,9 @@ STATUS_LABELS: dict[str, str] = {
     "PENDING_FC_CONFIRM": "FC 확인 대기",
     "COMPLIANT": "규정 준수 확인",
     "REJECTED": "반려",
+    "CALL": "전화",
+    "SMS": "문자",
+    "KAKAO": "카카오톡",
 }
 
 
@@ -37,6 +40,18 @@ def humanize(text: str) -> str:
     if t in STATUS_LABELS:
         return STATUS_LABELS[t]
     return t.replace("_", " ")
+
+
+def fmt_dt(value: str | None) -> str:
+    """ISO 8601 일시(YYYY-MM-DDTHH:MM:SS) → 화면 표시용(YYYY-MM-DD HH:MM).
+    'T' 구분자와 초 단위를 없애 raw 타임스탬프처럼 보이지 않게 한다."""
+    if not value:
+        return ""
+    v = nfc(str(value))
+    if "T" in v:
+        date_part, _, time_part = v.partition("T")
+        return f"{date_part} {time_part[:5]}"
+    return v
 
 
 def inject_css() -> None:
@@ -119,7 +134,7 @@ def inject_css() -> None:
 
         /* --- 사이드바 로고: 좌측 정렬, 최대한 위쪽으로. --- */
         .sidebar-logo { display: flex; justify-content: flex-start; align-items: center;
-            padding: 0; margin-top: -12px; margin-bottom: 14px; }
+            padding: 0; margin-top: -12px; margin-bottom: 22px; }
         .sidebar-logo img { height: 24px; display: block; }
 
         /* --- Streamlit 기본 헤더 툴바(Deploy/메뉴) 숨김 — 우리 상단 바와 중복되는 흰 띠 제거 --- */
@@ -136,7 +151,7 @@ def inject_css() -> None:
             padding-right: 10px !important;
         }
         [data-testid="stSidebarHeader"][data-testid="stSidebarHeader"][data-testid="stSidebarHeader"] {
-            height: 30px !important; min-height: 30px !important;
+            height: 22px !important; min-height: 22px !important;
         }
         [data-testid="stSidebarUserContent"][data-testid="stSidebarUserContent"][data-testid="stSidebarUserContent"] {
             padding-bottom: 12px !important; padding-left: 0 !important; padding-right: 0 !important;
@@ -241,6 +256,12 @@ def inject_css() -> None:
         /* --- 코드 블록 --- */
         div[data-testid="stCodeBlock"] { border-radius: var(--radius-control); }
 
+        /* --- 통화 녹취록: 긴 발화가 화면 밖으로 잘리지 않도록 줄바꿈 --- */
+        .transcript-block { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 0.84rem; line-height: 1.8; color: var(--ink); background: var(--surface-muted);
+            border-radius: var(--radius-control); padding: 14px 16px;
+            white-space: pre-wrap; word-break: break-word; }
+
         /* --- 구분선(st.markdown("---")): 기본 32px 여백은 과해서 축소 --- */
         hr { margin: 14px 0 !important; }
         </style>
@@ -331,6 +352,17 @@ def render_data_table(headers: list[str], rows: list[list[str]], num_col: int | 
         f'<tbody>{"".join(body_rows)}</tbody></table>',
         unsafe_allow_html=True,
     )
+
+
+def render_transcript(text: str) -> None:
+    """통화 녹취록 — st.code()는 긴 줄이 화면 밖으로 잘려 가로 스크롤이 생기므로,
+    줄바꿈되는 모노스페이스 블록으로 대신 렌더링한다."""
+    import html
+
+    import streamlit as st
+
+    escaped = html.escape(nfc(text))
+    st.markdown(f'<div class="transcript-block">{escaped}</div>', unsafe_allow_html=True)
 
 
 def section_header(title: str, first: bool = False) -> None:

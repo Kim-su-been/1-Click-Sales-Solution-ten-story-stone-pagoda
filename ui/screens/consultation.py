@@ -8,7 +8,7 @@ import streamlit as st
 import src.config as cfg
 from src import demo_state
 from src.data_loader import DataLoader
-from ui.common import nfc, section_header
+from ui.common import humanize, nfc, render_transcript, section_header
 
 
 def render(loader: DataLoader) -> None:
@@ -21,14 +21,21 @@ def render(loader: DataLoader) -> None:
 
     # 고객 정보
     section_header("상담 고객", first=True)
+    field_cells = "".join(
+        f'<div class="field"><span class="field-label">{label}</span>'
+        f'<span class="field-value">{value}</span></div>'
+        for label, value in [
+            ("연락처", nfc(cust.phone)),
+            ("생년", f"{cust.birth_year}년생"),
+            ("담당 FC", nfc(cust.fc_id)),
+            ("연락 채널", ", ".join(humanize(c) for c in cust.consent_channels)),
+        ]
+    )
     st.markdown(
         f"""
         <div class="pick-card">
           <div class="title">{nfc(cust.name)} 고객님 ({cust.customer_id})</div>
-          <div style="margin-top:6px">
-            {nfc(cust.phone)} · {cust.birth_year}년생 · 담당 FC {nfc(cust.fc_id)} ·
-            연락 채널 {', '.join(cust.consent_channels)}
-          </div>
+          <div class="field-row">{field_cells}</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -42,9 +49,9 @@ def render(loader: DataLoader) -> None:
         with col_status:
             active = demo_state.is_call_active()
             st.markdown(
-                '<span class="badge badge-warn">통화 연결됨</span>'
+                '<span class="badge badge-ok">통화 연결됨</span>'
                 if active else
-                '<span class="badge badge-info">통화 연결 대기</span>',
+                '<span class="badge badge-warn">통화 연결 대기</span>',
                 unsafe_allow_html=True,
             )
         with col_stt:
@@ -80,7 +87,7 @@ def render(loader: DataLoader) -> None:
             st.rerun()
         return
 
-    st.code(loader.utter_text(), language=None)
+    render_transcript(loader.utter_text())
     st.caption(f"총 {len(loader.transcript)}개 발화가 텍스트로 변환되었습니다.")
 
     # 상담 종료 → DB 반영 → 완료 및 분석 (녹취록이 준비된 뒤에만 다음 단계 버튼을 보여준다)
