@@ -6,7 +6,6 @@ import unicodedata
 
 import streamlit as st
 
-import src.config as cfg
 from src import demo_state
 from src.data_loader import DataLoader
 from ui.common import humanize, nfc, page_header, render_evidence, section_header
@@ -33,11 +32,6 @@ def render(loader: DataLoader) -> None:
     next_actions = rt.output.next_action_result["next_actions"]
     calendar = rt.output.next_action_result["calendar_candidate"]
     cust_id = rt.output.daily_pick["customer_id"]
-
-    st.markdown(
-        f'<div class="notice">{nfc(cfg.NOTICE_TEXT)}</div>',
-        unsafe_allow_html=True,
-    )
 
     # 상담 요약
     section_header("상담 요약", first=True)

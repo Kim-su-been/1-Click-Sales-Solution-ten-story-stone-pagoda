@@ -40,10 +40,6 @@ DEMO_AS_OF_DATE = "2026-09-09"
 
 # --- UI ---
 APP_TITLE = "1-Pick Rescue Agent"
-NOTICE_TEXT = (
-    "본 데모에 표시된 모든 고객·계약·상품·상담 데이터는 해커톤 시연을 위한 "
-    "가상 데이터이며 실제 보험계약이나 고객 정보가 아닙니다."
-)
 
 # --- 화면 상태 (demo_state.py 와 공유) ---
 SCREEN_DAILY_PICK = "DAILY_PICK"

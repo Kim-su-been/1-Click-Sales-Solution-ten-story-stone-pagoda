@@ -21,11 +21,6 @@ def render(loader: DataLoader) -> None:
     pick = rt.output.daily_pick
     cust = loader.get_customer(pick["customer_id"])
 
-    st.markdown(
-        f'<div class="notice">{nfc(cfg.NOTICE_TEXT)}</div>',
-        unsafe_allow_html=True,
-    )
-
     # 고객 정보
     section_header("상담 고객", first=True)
     st.markdown(

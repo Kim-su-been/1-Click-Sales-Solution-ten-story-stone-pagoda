@@ -18,12 +18,6 @@ def _format_months(m: int | None) -> str:
 def render(loader: DataLoader) -> None:
     page_header("오늘의 1-Pick", "STEP 1 / 3 · 고객 선정")
 
-    # 가상 데이터 고지
-    st.markdown(
-        f'<div class="notice">{nfc(cfg.NOTICE_TEXT)}</div>',
-        unsafe_allow_html=True,
-    )
-
     # Runtime Agent 결과 직접 계산 (Expected 미사용)
     from src.agents.customer_selection import run_customer_selection, load_contracts_by_customer
     from src.agents.grounding_safety import run_grounding_safety

@@ -47,9 +47,9 @@ def inject_css() -> None:
         """
         <style>
         :root {
-            --accent: #0e5a82;
-            --accent-strong: #0a4260;
-            --accent-weak: #e8f0f4;
+            --accent: #1792cd;
+            --accent-strong: #12719f;
+            --accent-weak: #e8f4fb;
             --ink: #16212e;
             --ink-secondary: #5b6b7c;
             --ink-tertiary: #85919d;
@@ -67,10 +67,27 @@ def inject_css() -> None:
             --shadow-card: 0 1px 2px rgba(15,23,42,0.05);
         }
 
+        /* 우리다움체 (우리금융그룹 공식 무료 서체) — 로드 실패 시 시스템 고딕 폰트로 자연스럽게 대체 */
+        @font-face {
+            font-family: "Wooridaum";
+            src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2205@v1.0/WooridaumL.woff2") format("woff2");
+            font-weight: 300; font-style: normal; font-display: swap;
+        }
+        @font-face {
+            font-family: "Wooridaum";
+            src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2205@v1.0/WooridaumR.woff2") format("woff2");
+            font-weight: 400; font-style: normal; font-display: swap;
+        }
+        @font-face {
+            font-family: "Wooridaum";
+            src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2205@v1.0/WooridaumB.woff2") format("woff2");
+            font-weight: 700; font-style: normal; font-display: swap;
+        }
+
         [data-testid="stAppViewContainer"] .block-container { padding-top: 4.5rem; max-width: 1120px; }
         html, body, [class*="css"] {
             color: var(--ink);
-            font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+            font-family: "Wooridaum", "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
                 "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", sans-serif;
         }
 
@@ -116,9 +133,6 @@ def inject_css() -> None:
         .badge-ok { background: var(--ok-bg); color: var(--ok); }
         .badge-warn { background: var(--warn-bg); color: var(--warn); }
         .badge-info { background: var(--accent-weak); color: var(--accent); }
-
-        /* --- 고지/안내 문구: 화면을 압도하지 않도록 캡션 수준으로 축소 --- */
-        .notice { font-size: 0.74rem; color: var(--ink-tertiary); margin: -6px 0 22px 0; line-height: 1.5; }
 
         /* --- 근거 블록 --- */
         .ev-block { background: var(--surface-muted); border-radius: var(--radius-control);
