@@ -259,7 +259,7 @@ def inject_css() -> None:
         /* --- 통화 녹취록: 긴 발화가 화면 밖으로 잘리지 않도록 줄바꿈 --- */
         .transcript-block { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
             font-size: 0.84rem; line-height: 1.8; color: var(--ink); background: var(--surface-muted);
-            border-radius: var(--radius-control); padding: 14px 16px;
+            border-radius: var(--radius-control); padding: 14px 16px; margin-bottom: 10px;
             white-space: pre-wrap; word-break: break-word; }
 
         /* --- 구분선(st.markdown("---")): 기본 32px 여백은 과해서 축소 --- */
