@@ -102,12 +102,17 @@ def inject_css() -> None:
 
         h1 { font-size: 1.3rem !important; }
 
-        /* --- 상단 유틸리티 바: 좌측 breadcrumb(시스템 내 위치) · 우측 로고 --- */
+        /* --- 상단 앱 바: 패널 상단 전체 폭에 색이 채워진 업무 시스템 헤더.
+           패널 padding(28px 40px)만큼 음수 마진으로 가장자리까지 색을 채운다. --- */
         .top-bar { display: flex; justify-content: space-between; align-items: center;
-            padding: 0 0 14px 0; margin-bottom: 22px; border-bottom: 1px solid var(--line); }
-        .top-bar .breadcrumb { font-size: 0.78rem; color: var(--ink-tertiary); font-weight: 500; }
-        .top-bar .breadcrumb b { color: var(--ink-secondary); font-weight: 700; }
-        .top-bar img { height: 20px; display: block; }
+            background: var(--accent-strong); color: #ffffff;
+            padding: 15px 40px; margin: -28px -40px 24px -40px;
+            border-radius: var(--radius-card) var(--radius-card) 0 0; }
+        .top-bar .breadcrumb { font-size: 0.82rem; color: rgba(255,255,255,0.82); font-weight: 500; }
+        .top-bar .breadcrumb b { color: #ffffff; font-weight: 700; }
+        .top-bar .logo-chip { background: #ffffff; padding: 5px 12px; border-radius: 6px;
+            display: flex; align-items: center; line-height: 0; }
+        .top-bar .logo-chip img { height: 18px; display: block; }
 
         /* --- 사이드바 --- */
         [data-testid="stSidebarContent"] { padding-top: 0.75rem; }
@@ -168,21 +173,18 @@ def inject_css() -> None:
         .data-table td.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
             font-size: 0.76rem; color: var(--ink-tertiary); }
 
-        /* --- 사이드바 진행 스테퍼 --- */
+        /* --- 사이드바 진행 스테퍼: 업무 시스템 좌측 메뉴처럼 STEP 번호 + 라벨,
+           원형 도트 대신 좌측 보더로 현재 위치를 표시 --- */
         .stepper { margin: 4px 0 20px 0; }
-        .step { display: flex; align-items: center; gap: 12px; position: relative; padding: 7px 0; }
-        .step:not(:last-child)::after {
-            content: ""; position: absolute; left: 13px; top: 32px; width: 2px; height: 18px;
-            background: var(--line);
-        }
-        .step-dot { flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.7rem; font-weight: 700; background: var(--surface); color: var(--ink-tertiary);
-            border: 1.5px solid var(--line); }
-        .step-label { font-size: 0.85rem; color: var(--ink-tertiary); }
-        .step-done .step-dot { background: var(--ok-bg); border-color: var(--ok-bg); color: var(--ok); }
+        .step { padding: 9px 0 9px 14px; margin-bottom: 2px; border-left: 3px solid transparent; }
+        .step-eyebrow { font-size: 0.66rem; font-weight: 700; color: var(--ink-tertiary);
+            letter-spacing: .04em; margin-bottom: 2px; }
+        .step-label { font-size: 0.86rem; color: var(--ink-tertiary); }
+        .step-done { border-left-color: var(--ok); }
+        .step-done .step-eyebrow { color: var(--ok); }
         .step-done .step-label { color: var(--ink-secondary); }
-        .step-current .step-dot { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .step-current { border-left-color: var(--accent); }
+        .step-current .step-eyebrow { color: var(--accent); }
         .step-current .step-label { color: var(--ink); font-weight: 700; }
 
         /* --- 버튼: 단일 accent, 각진 radius, 툴바에 가까운 높이감 --- */
@@ -234,7 +236,7 @@ def render_top_bar(module_label: str, app_title: str) -> None:
     logo_html = ""
     if logo_path.exists():
         b64 = base64.b64encode(logo_path.read_bytes()).decode("ascii")
-        logo_html = f'<img src="data:image/png;base64,{b64}" alt="동양생명" />'
+        logo_html = f'<span class="logo-chip"><img src="data:image/png;base64,{b64}" alt="동양생명" /></span>'
 
     st.markdown(
         f'<div class="top-bar">'
@@ -310,15 +312,15 @@ def render_stepper(steps: dict[str, str], current: str) -> None:
     for i, key in enumerate(keys):
         label = nfc(steps[key])
         if i < current_idx:
-            state, icon = "done", "✓"
+            state = "done"
         elif i == current_idx:
-            state, icon = "current", str(i + 1)
+            state = "current"
         else:
-            state, icon = "upcoming", str(i + 1)
+            state = "upcoming"
         rows.append(
             f'<div class="step step-{state}">'
-            f'<span class="step-dot">{icon}</span>'
-            f'<span class="step-label">{label}</span>'
+            f'<div class="step-eyebrow">STEP 0{i + 1}</div>'
+            f'<div class="step-label">{label}</div>'
             f"</div>"
         )
     st.markdown(f'<div class="stepper">{"".join(rows)}</div>', unsafe_allow_html=True)
