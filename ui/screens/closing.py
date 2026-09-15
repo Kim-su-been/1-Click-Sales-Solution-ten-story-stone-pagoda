@@ -8,7 +8,14 @@ import streamlit as st
 
 from src import demo_state
 from src.data_loader import DataLoader
-from ui.common import humanize, nfc, render_evidence, section_header
+from ui.common import (
+    humanize,
+    nfc,
+    render_data_table,
+    render_evidence,
+    render_item_evidence,
+    section_header,
+)
 
 
 def _transcript_snippet(loader: DataLoader, evidenceRef: str) -> str:
@@ -37,22 +44,19 @@ def render(loader: DataLoader) -> None:
         st.write(nfc(analysis.get("ai_summary", "")))
         st.caption(f"총 {len(loader.transcript)}개 발화를 분석한 결과입니다.")
 
-    # 고객 반응·관심·걱정·거절
+    # 고객 반응·관심·걱정·거절 — 항목 텍스트를 펼치기 제목으로 써서 항목당 한 줄로 압축
     section_header("고객의 관심사항과 반응")
     st.markdown("**기존 보장내용 확인 요청**")
     for need in analysis["customer_needs"]:
-        st.markdown(f"- {humanize(need['need'])}")
-        render_evidence(need["evidence"], label="근거", key_prefix=f"need_{need['need'][:8]}")
+        render_item_evidence(humanize(need["need"]), need["evidence"], key_prefix=f"need_{need['need'][:8]}")
 
     st.markdown("**보험료 및 갱신 걱정**")
     for c in analysis["concerns"]:
-        st.markdown(f"- {humanize(c['concern'])}")
-        render_evidence(c["evidence"], label="근거", key_prefix=f"concern_{c['concern'][:8]}")
+        render_item_evidence(humanize(c["concern"]), c["evidence"], key_prefix=f"concern_{c['concern'][:8]}")
 
     st.markdown("**추가 가입 의향 / 무관심**")
     for item in analysis["rejection_or_disinterest"]:
-        st.markdown(f"- {humanize(item['item'])}")
-        render_evidence(item["evidence"], label="근거", key_prefix=f"rej_{item['item'][:8]}")
+        render_item_evidence(humanize(item["item"]), item["evidence"], key_prefix=f"rej_{item['item'][:8]}")
 
     # 상담 결과
     section_header("고객 반응과 상담 결과")
@@ -76,20 +80,25 @@ def render(loader: DataLoader) -> None:
     st.caption(nfc(crm.get("note", "")))
 
     rec = crm["crm_record"]
-    st.markdown(
-        f"""
-        - **상담 유형**: {nfc(rec.get('consultation_type',''))} · **일시**: {rec.get('consultation_datetime')}
-        - **결과**: {humanize(rec.get('outcome',''))}
-        - **고객 니즈**: {', '.join(humanize(x) for x in rec.get('customer_needs', []))}
-        - **관심사**: {', '.join(nfc(x) for x in rec.get('customer_interests', []))}
-        - **걱정**: {', '.join(humanize(x) for x in rec.get('concerns', []))}
-        - **무관심**: {', '.join(humanize(x) for x in rec.get('disinterest_items', []))}
-        - **후속 필요**: {'예' if rec.get('followup_needed') else '아니오'} ·
-          **희망 일시**: {rec.get('preferred_datetime')}
-        """
-    )
-    st.markdown("**통화 근거 확인**")
-    render_evidence(crm["each_field_evidence"], label="CRM 필드별 근거", key_prefix="crm")
+    with st.container(border=True):
+        render_data_table(
+            ["항목", "내용"],
+            [
+                ["<b>상담 유형</b>", nfc(rec.get("consultation_type", "")) or "-"],
+                ["<b>상담 일시</b>", rec.get("consultation_datetime") or "-"],
+                ["<b>결과</b>", humanize(rec.get("outcome", ""))],
+                ["<b>고객 니즈</b>", ", ".join(humanize(x) for x in rec.get("customer_needs", [])) or "-"],
+                ["<b>관심사</b>", ", ".join(nfc(x) for x in rec.get("customer_interests", [])) or "-"],
+                ["<b>걱정</b>", ", ".join(humanize(x) for x in rec.get("concerns", [])) or "-"],
+                ["<b>무관심</b>", ", ".join(humanize(x) for x in rec.get("disinterest_items", [])) or "-"],
+                [
+                    "<b>후속 필요</b>",
+                    ("예 · 희망 일시 " + str(rec.get("preferred_datetime", "")))
+                    if rec.get("followup_needed") else "아니오",
+                ],
+            ],
+        )
+    render_evidence(crm["each_field_evidence"], label="통화 근거 확인", key_prefix="crm")
 
     # FC 확인 + 저장
     section_header("FC 확인 및 저장")

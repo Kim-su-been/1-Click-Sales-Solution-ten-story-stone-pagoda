@@ -117,11 +117,9 @@ def inject_css() -> None:
             font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
         .user-chip .info .role { font-size: 0.72rem; color: var(--ink-tertiary); }
 
-        /* --- 사이드바 로고: 사이드바 상단, 가운데 정렬.
-           음수 마진으로 가장자리까지 "빼내는" 방식 대신, 사이드바 자체의 좌우 padding을
-           작은 값으로 직접 고정해 불필요한 여백을 없앤다 (아래 참고). --- */
-        .sidebar-logo { display: flex; justify-content: center; align-items: center;
-            padding: 8px 0; margin-top: -12px; margin-bottom: 14px; }
+        /* --- 사이드바 로고: 좌측 정렬, 최대한 위쪽으로. --- */
+        .sidebar-logo { display: flex; justify-content: flex-start; align-items: center;
+            padding: 0; margin-top: -12px; margin-bottom: 14px; }
         .sidebar-logo img { height: 24px; display: block; }
 
         /* --- Streamlit 기본 헤더 툴바(Deploy/메뉴) 숨김 — 우리 상단 바와 중복되는 흰 띠 제거 --- */
@@ -372,10 +370,7 @@ def render_stepper(steps: dict[str, str], current: str) -> None:
     st.markdown(f'<div class="stepper">{"".join(rows)}</div>', unsafe_allow_html=True)
 
 
-def render_evidence(evidence: Any, label: str | None = None, key_prefix: str = "ev") -> None:
-    """single evidence dict 또는 evidence 목록을 펼치기 영역으로 렌더링."""
-    import streamlit as st
-
+def _extract_evidence_items(evidence: Any) -> list[dict[str, Any]]:
     items: list[dict[str, Any]] = []
     if isinstance(evidence, dict) and ("evidenceType" in evidence or "evidenceText" in evidence):
         items = [evidence]
@@ -386,23 +381,49 @@ def render_evidence(evidence: Any, label: str | None = None, key_prefix: str = "
         for v in evidence.values():
             if isinstance(v, dict) and "evidenceText" in v:
                 items.append(v)
+    return items
 
+
+def _render_evidence_blocks(items: list[dict[str, Any]]) -> None:
+    import streamlit as st
+
+    for ev in items:
+        etype = nfc(str(ev.get("evidenceType", "")))
+        eref = nfc(str(ev.get("evidenceRef", "")))
+        etext = nfc(str(ev.get("evidenceText", "")))
+        st.markdown(
+            f"""
+            <div class="ev-block">
+            <b>{etype}</b> · <code>{eref}</code><br/>
+            {etext}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+def render_evidence(evidence: Any, label: str | None = None, key_prefix: str = "ev") -> None:
+    """single evidence dict 또는 evidence 목록을 펼치기 영역으로 렌더링."""
+    import streamlit as st
+
+    items = _extract_evidence_items(evidence)
     if not items:
         st.caption("(근거 없음)")
         return
 
     title = label or f"근거 확인 {key_prefix}"
     with st.expander(title):
-        for ev in items:
-            etype = nfc(str(ev.get("evidenceType", "")))
-            eref = nfc(str(ev.get("evidenceRef", "")))
-            etext = nfc(str(ev.get("evidenceText", "")))
-            st.markdown(
-                f"""
-                <div class="ev-block">
-                <b>{etype}</b> · <code>{eref}</code><br/>
-                {etext}
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+        _render_evidence_blocks(items)
+
+
+def render_item_evidence(text: str, evidence: Any, key_prefix: str = "item") -> None:
+    """항목 텍스트 자체를 펼치기 제목으로 써서, 항목 한 줄 + 근거 박스로 따로 나뉘던 걸
+    하나의 expander로 합친다 (반복되는 '근거' 라벨과 줄 수를 줄이기 위함)."""
+    import streamlit as st
+
+    items = _extract_evidence_items(evidence)
+    if not items:
+        st.markdown(f"- {nfc(text)}")
+        return
+    with st.expander(nfc(text)):
+        _render_evidence_blocks(items)
